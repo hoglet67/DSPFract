@@ -157,7 +157,7 @@ vga_proc: process(rv, rm.latch, rm.state,  base_addr_word)
          end if;
          
          if rv.increment = '1' then
-            nv.read_addr  <= rv.read_addr+1;
+            nv.read_addr  <= rv.read_addr+2;
          end if;
       end if;
    end process;
