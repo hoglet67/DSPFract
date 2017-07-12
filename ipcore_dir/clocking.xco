@@ -1,7 +1,7 @@
 ##############################################################
 #
-# Xilinx Core Generator version 13.3
-# Date: Fri Jan 27 09:38:28 2012
+# Xilinx Core Generator version 14.7
+# Date: Wed Jul 12 14:53:08 2017
 #
 ##############################################################
 #
@@ -12,7 +12,7 @@
 #
 ##############################################################
 #
-#  Generated from component: xilinx.com:ip:clk_wiz:3.2
+#  Generated from component: xilinx.com:ip:clk_wiz:3.6
 #
 ##############################################################
 #
@@ -31,12 +31,12 @@ SET implementationfiletype = Ngc
 SET package = tqg144
 SET removerpms = false
 SET simulationfiles = Behavioral
-SET speedgrade = -3
+SET speedgrade = -2
 SET verilogsim = false
 SET vhdlsim = true
 # END Project Options
 # BEGIN Select
-SELECT Clocking_Wizard xilinx.com:ip:clk_wiz:3.2
+SELECT Clocking_Wizard xilinx.com:ip:clk_wiz:3.6
 # END Select
 # BEGIN Parameters
 CSET calc_done=DONE
@@ -108,14 +108,14 @@ CSET daddr_port=DADDR
 CSET dclk_port=DCLK
 CSET dcm_clk_feedback=1X
 CSET dcm_clk_out1_port=CLKFX
-CSET dcm_clk_out2_port=CLKFX180
-CSET dcm_clk_out3_port=CLKDV
+CSET dcm_clk_out2_port=CLKFX
+CSET dcm_clk_out3_port=CLKFX
 CSET dcm_clk_out4_port=CLK0
 CSET dcm_clk_out5_port=CLK0
 CSET dcm_clk_out6_port=CLK0
-CSET dcm_clkdv_divide=16.0
-CSET dcm_clkfx_divide=2
-CSET dcm_clkfx_multiply=5
+CSET dcm_clkdv_divide=2.0
+CSET dcm_clkfx_divide=8
+CSET dcm_clkfx_multiply=25
 CSET dcm_clkgen_clk_out1_port=CLKFX
 CSET dcm_clkgen_clk_out2_port=CLKFX
 CSET dcm_clkgen_clk_out3_port=CLKFX
@@ -239,6 +239,8 @@ CSET secondary_in_freq=100.000
 CSET secondary_in_jitter=0.010
 CSET secondary_port=CLK_IN2
 CSET secondary_source=Single_ended_clock_capable_pin
+CSET ss_mod_freq=250
+CSET ss_mode=CENTER_HIGH
 CSET status_port=STATUS
 CSET summary_strings=empty
 CSET use_clk_valid=false
@@ -257,10 +259,11 @@ CSET use_phase_alignment=true
 CSET use_power_down=false
 CSET use_reset=false
 CSET use_spread_spectrum=false
+CSET use_spread_spectrum_1=false
 CSET use_status=false
 # END Parameters
 # BEGIN Extra information
-MISC pkg_timestamp=2011-03-09T16:42:33.000Z
+MISC pkg_timestamp=2012-05-10T12:44:55Z
 # END Extra information
 GENERATE
-# CRC: fd5e6adc
+# CRC: cf9b946a
