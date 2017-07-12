@@ -25,8 +25,8 @@ entity memory_video is
            mem_nCE      : out   STD_LOGIC;
            mem_nWE      : out   STD_LOGIC;
            mem_nOE      : out   STD_LOGIC;
-           mem_addr     : out   STD_LOGIC_VECTOR (17 downto 0);
-           mem_data     : inout STD_LOGIC_VECTOR (15 downto 0));
+           mem_addr     : out   STD_LOGIC_VECTOR (18 downto 0);
+           mem_data     : inout STD_LOGIC_VECTOR (7 downto 0));
 end memory_video;
 
 architecture Behavioral of memory_video is
@@ -44,7 +44,7 @@ architecture Behavioral of memory_video is
       colour      : std_logic_vector( 7 downto 0);
       hCounter    : std_logic_vector(10 downto 0); -- 0 -> hMax-1
       vCounter    : std_logic_vector( 9 downto 0); -- 0 -> vMax-1
-      read_addr   : std_logic_vector(17 downto 0);
+      read_addr   : std_logic_vector(18 downto 0);
       increment   : std_logic;
       display     : std_logic;
       hSync       : std_logic;
@@ -56,9 +56,9 @@ architecture Behavioral of memory_video is
 
    type regm is record
       state       : std_logic_vector( 2 downto 0);
-      address     : std_logic_vector(17 downto 0);
-      newValue    : std_logic_vector(15 downto 0);
-      latch       : std_logic_vector(15 downto 0);
+      address     : std_logic_vector(18 downto 0);
+      newValue    : std_logic_vector( 7 downto 0);
+      latch       : std_logic_vector( 7 downto 0);
       hold_byte   : std_logic_vector( 7 downto 0);
       hold_addr   : std_logic_vector(18 downto 0);
       write_taken : std_logic;
@@ -100,7 +100,7 @@ tristate_proc: process(rm)
       if rm.state = state_150 or rm.state = state_175 then 
          mem_data    <= rm.newValue;
       else
-         mem_data    <= "ZZZZZZZZZZZZZZZZ";
+         mem_data    <= "ZZZZZZZZ";
       end if;
    end process;
 
@@ -131,7 +131,7 @@ vga_proc: process(rv, rm.latch, rm.state,  base_addr_word)
             nv.hCounter <= (others => '0');
             if rv.vcounter = vMax-1 then 
                nv.vCounter  <= (others => '0');
-               nv.read_addr <= base_addr_word + (14 * hFrameWidth + 14)/2;
+               nv.read_addr <= (base_addr_word & '0') + (14 * hFrameWidth + 14);
             else
                nv.vCounter <= rv.vCounter+1;
             end if;
@@ -141,11 +141,7 @@ vga_proc: process(rv, rm.latch, rm.state,  base_addr_word)
       else
          -- Update the display RGB values every other cycle
          if rv.display = '1' then
-            if rm.state(1) = '0' then 
-               nv.colour  <= rm.latch(15 downto 8);
-            else
-              nv.colour  <= rm.latch(7 downto 0);
-            end if;
+            nv.colour  <= rm.latch(7 downto 0);
          else
             nv.colour  <= (others => '0');
          end if;
@@ -181,7 +177,7 @@ mem_proc: process(rm, rv.read_addr, write_ready, write_addr, write_byte, mem_dat
 
          -- capture the adderss and value of the new write
          if write_ready = '0' then
-           nm.hold_addr   <= write_Addr+(base_addr_word&'0');
+           nm.hold_addr   <= write_Addr;
            nm.hold_byte   <= write_byte;
            nm.write_taken <= '1';
          end if;
@@ -192,7 +188,7 @@ mem_proc: process(rm, rv.read_addr, write_ready, write_addr, write_byte, mem_dat
          nm.latch     <= mem_data; 
          
          -- Setting up the read of the byte to be updated
-         nm.address     <= rm.hold_addr(18 downto 1);
+         nm.address     <= rm.hold_addr(18 downto 0);
 
       when state_50 =>
          nm.state   <= state_75;
@@ -203,11 +199,7 @@ mem_proc: process(rm, rv.read_addr, write_ready, write_addr, write_byte, mem_dat
          nm.state      <= state_100;
 
          -- Capturing the value which will be written into the memory location
-         if rm.hold_addr(0) = '0' then
-            nm.newValue <= mem_data(15 downto 8) & rm.hold_byte;
-         else
-            nm.newValue <= rm.hold_byte & mem_data(7 downto 0);
-         end if;
+         nm.newValue <= nm.hold_byte;
          
          -- Setting up for the read for video memory
          nm.address    <= rv.read_addr;
@@ -222,7 +214,7 @@ mem_proc: process(rm, rv.read_addr, write_ready, write_addr, write_byte, mem_dat
          nm.latch     <= mem_data; 
          
          -- Setting up the write of the byte to be updated
-         nm.address  <= rm.hold_addr(18 downto 1);
+         nm.address  <= rm.hold_addr(18 downto 0);
          nm.noe      <= '1';
          nm.nWE      <= '0';
 

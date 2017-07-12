@@ -13,12 +13,11 @@ entity TopModule is
       blue   : out  STD_LOGIC_VECTOR (3 downto 0);
       
       -- Memory
-      mem_nBE : OUT std_logic;
       mem_nCE : OUT std_logic;
       mem_nWE : OUT std_logic;
       mem_nOE : OUT std_logic;
-      mem_addr : OUT std_logic_vector(17 downto 0);
-      mem_data : INOUT std_logic_vector(15 downto 0);
+      mem_addr : OUT std_logic_vector(18 downto 0);
+      mem_data : INOUT std_logic_vector(7 downto 0);
       
       -- User constrols
       btn_up           : in  STD_LOGIC;
@@ -128,8 +127,8 @@ architecture Behavioral of TopModule is
       mem_nCE : OUT std_logic;
       mem_nWE : OUT std_logic;
       mem_nOE : OUT std_logic;
-      mem_addr : OUT std_logic_vector(17 downto 0);
-      mem_data : INOUT std_logic_vector(15 downto 0)
+      mem_addr : OUT std_logic_vector(18 downto 0);
+      mem_data : INOUT std_logic_vector(7 downto 0)
    );
    END COMPONENT;
 
@@ -208,7 +207,6 @@ begin
    red   <= colour(7 downto 5) & 'Z';
    green <= colour(4 downto 2) & 'Z';
    blue  <= colour(1 downto 0) & "ZZ";
-   mem_nbe <= '0';
    vsync <= vsync_sig;
 
    clocking_inst : clocking port map (
