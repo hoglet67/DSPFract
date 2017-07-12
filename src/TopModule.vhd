@@ -1,24 +1,25 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
 entity TopModule is
-    Port ( 
+    Port (
       clk_32 : in  STD_LOGIC;
-    
+
       -- video
       hsync : OUT std_logic;
       vsync : OUT std_logic;
       red    : out  STD_LOGIC_VECTOR (3 downto 0);
       green  : out  STD_LOGIC_VECTOR (3 downto 0);
       blue   : out  STD_LOGIC_VECTOR (3 downto 0);
-      
+
       -- Memory
       mem_nCE : OUT std_logic;
       mem_nWE : OUT std_logic;
       mem_nOE : OUT std_logic;
       mem_addr : OUT std_logic_vector(18 downto 0);
       mem_data : INOUT std_logic_vector(7 downto 0);
-      
+
       -- User constrols
       btn_up           : in  STD_LOGIC;
       btn_down      : in  STD_LOGIC;
@@ -32,7 +33,7 @@ architecture Behavioral of TopModule is
    PORT(
       clk : IN std_logic;
       base_addr_word : out std_logic_vector(17 downto 0);
-      accepted       : IN std_logic;          
+      accepted       : IN std_logic;
       x              : OUT std_logic_vector(9 downto 0);
       y              : OUT std_logic_vector(9 downto 0);
       vsync          : IN std_logic;
@@ -45,13 +46,13 @@ architecture Behavioral of TopModule is
       storex         : OUT std_logic;
       storey         : OUT std_logic
 );
-      
+
    END COMPONENT;
 
    COMPONENT loop_manager
    PORT(
       clk           : IN std_logic;
-      
+
       x_new         : IN  std_logic_vector(9 downto 0);
       y_new         : IN  std_logic_vector(9 downto 0);
       constant_new  : IN  std_logic_vector(35 downto 0);
@@ -65,15 +66,15 @@ architecture Behavioral of TopModule is
       y_result          : OUT std_logic_vector(9 downto 0);
       iterations_result : OUT std_logic_vector(7 downto 0);
       result_valid      : OUT std_logic;
-      
+
       iterations_in     : IN std_logic_vector(7 downto 0);
       overflow_in       : IN std_logic;
       real_in           : IN std_logic_vector(35 downto 0);
       imaginary_in      : IN std_logic_vector(35 downto 0);
       x_in              : IN std_logic_vector(9 downto 0);
       y_in              : IN std_logic_vector(9 downto 0);
-      active_in         : IN std_logic;          
-      
+      active_in         : IN std_logic;
+
       iterations_out : OUT std_logic_vector(7 downto 0);
       overflow_out : OUT std_logic;
       real_out : OUT std_logic_vector(35 downto 0);
@@ -86,7 +87,7 @@ architecture Behavioral of TopModule is
       active_out : OUT std_logic
       );
    END COMPONENT;
-   
+
    COMPONENT mandelbrot_stage
    PORT(
       clk : IN std_logic;
@@ -99,7 +100,7 @@ architecture Behavioral of TopModule is
       constant_in : IN std_logic_vector(35 downto 0);
       storex_in : IN std_logic;
       storey_in : IN std_logic;
-      active_in : IN std_logic;          
+      active_in : IN std_logic;
       iterations_out : OUT std_logic_vector(7 downto 0);
       overflow_out : OUT std_logic;
       real_out : OUT std_logic_vector(35 downto 0);
@@ -119,7 +120,7 @@ architecture Behavioral of TopModule is
       base_addr_word : in std_logic_vector(17 downto 0);
       write_ready : IN std_logic;
       write_addr : IN std_logic_vector(18 downto 0);
-      write_byte : IN std_logic_vector(7 downto 0);    
+      write_byte : IN std_logic_vector(7 downto 0);
       write_taken : OUT std_logic;
       hsync : OUT std_logic;
       vsync : OUT std_logic;
@@ -141,7 +142,7 @@ architecture Behavioral of TopModule is
       clk_mem : IN std_logic;
       write_data : IN std_logic;
       fifo_full : out std_logic;
-      read_data : IN std_logic;          
+      read_data : IN std_logic;
       address_out : OUT std_logic_vector(18 downto 0);
       data_out : OUT std_logic_vector(7 downto 0);
       fifo_empty : OUT std_logic
@@ -158,6 +159,10 @@ architecture Behavioral of TopModule is
       CLK_core          : out    std_logic
    );
    end component;
+
+   signal   current_colormap : unsigned (3 downto 0);
+   signal   btn_left_old  : std_logic;
+   signal   btn_right_old  : std_logic;
 
    signal   real_1      : std_logic_vector(35 downto 0);
    signal   imaginary_1 : std_logic_vector(35 downto 0);
@@ -187,11 +192,11 @@ architecture Behavioral of TopModule is
    signal   storey_new      : STD_LOGIC := '0';
    signal   new_point       : STD_LOGIC := '0';
    signal   accepted        : STD_LOGIC := '0';
-      
+
    signal   x_result          : std_logic_vector(9 downto 0);
    signal   y_result          : std_logic_vector(9 downto 0);
    signal   iterations_result : std_logic_vector(7 downto 0);
-      
+
    signal   write_byte       : std_logic_vector(7 downto 0);
    signal   write_address    : std_logic_vector(18 downto 0);
    signal   write_taken      : std_logic;
@@ -201,12 +206,20 @@ architecture Behavioral of TopModule is
 
    signal result_valid  : std_logic;
    signal colour:        std_logic_vector(7 downto 0);
-   
+
    signal vsync_sig : std_logic;
+
+
+   signal rgb, rgb_reg : std_logic_vector (11 downto 0);
+
+   signal rgb_rainbow, rgb_caramel, rgb_anet, rgb_roygold, rgb_polar : std_logic_vector (11 downto 0);
+   signal rgb_wild, rgb_tropic, rgb_stargate, rgb_rosewht : std_logic_vector (11 downto 0);
+   signal rgb_rose1, rgb_flowers3, rgb_candy, rgb_candy1 : std_logic_vector (11 downto 0);
+
 begin
-   red   <= colour(7 downto 5) & 'Z';
-   green <= colour(4 downto 2) & 'Z';
-   blue  <= colour(1 downto 0) & "ZZ";
+   red   <= rgb_reg(11 downto 8);
+   green <= rgb_reg(7 downto 4);
+   blue  <= rgb_reg(3 downto 0);
    vsync <= vsync_sig;
 
    clocking_inst : clocking port map (
@@ -269,7 +282,7 @@ begin
 
    Inst_loop_manager: loop_manager PORT MAP(
       clk => clk_core,
-      
+
       x_new        => x_new,
       y_new        => y_new,
       storex_new   => storex_new,
@@ -277,13 +290,13 @@ begin
       constant_new => constant_new,
       new_point    => new_point,
       accepted_new => accepted,
-            
+
       x_result          => x_result,
       y_result          => y_result,
       iterations_result => iterations_result,
       result_valid      => result_valid,
       output_fifo_full  => output_fifo_full,
-      
+
       iterations_in => iterations_2,
       overflow_in => overflow_2,
       real_in => real_2,
@@ -292,7 +305,7 @@ begin
       y_in => y_2,
       active_in => active_2,
 
-      
+
       iterations_out => iterations_1,
       overflow_out => overflow_1,
       real_out => real_1,
@@ -304,7 +317,7 @@ begin
       storey_out => storey_1,
       active_out => active_1
    );
-   
+
    Inst_mandelbrot_stage: mandelbrot_stage PORT MAP(
       clk => clk_core,
       iterations_in => iterations_1,
@@ -317,7 +330,7 @@ begin
       storex_in => storex_1,
       storey_in => storey_1,
       active_in => active_1,
-      
+
       iterations_out => iterations_2,
       overflow_out => overflow_2,
       real_out => real_2,
@@ -329,5 +342,137 @@ begin
       storey_out => open,
       active_out => active_2
    );
+
+   -- Color Maps
+
+   colormap_rainbow : entity work.colormap_rainbow
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_rainbow
+   );
+
+   colormap_caramel : entity work.colormap_caramel
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_caramel
+   );
+
+   colormap_roygold : entity work.colormap_roygold
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_roygold
+   );
+
+   colormap_polar : entity work.colormap_polar
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_polar
+   );
+
+   colormap_wild : entity work.colormap_wild
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_wild
+   );
+
+   colormap_tropic : entity work.colormap_tropic
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_tropic
+   );
+
+   colormap_stargate : entity work.colormap_stargate
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_stargate
+   );
+
+   colormap_rosewht : entity work.colormap_rosewht
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_rosewht
+   );
+
+   colormap_rose1 : entity work.colormap_rose1
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_rose1
+   );
+
+   colormap_flowers3 : entity work.colormap_flowers3
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_flowers3
+   );
+
+   colormap_candy : entity work.colormap_candy
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_candy
+   );
+
+   colormap_candy1 : entity work.colormap_candy1
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_candy1
+   );
+
+   colormap_anet : entity work.colormap_anet
+   port map (
+     clk => CLK_mem,
+     addr => colour,
+     data => rgb_anet
+   );
+
+   rgb <=      rgb_rainbow when current_colormap = 0
+          else rgb_roygold when current_colormap = 1
+          else rgb_polar when current_colormap = 2
+          else rgb_wild when current_colormap = 3
+          else rgb_tropic when current_colormap = 4
+          else rgb_stargate when current_colormap = 5
+          else rgb_rosewht when current_colormap = 6
+          else rgb_rose1 when current_colormap = 7
+          else rgb_flowers3 when current_colormap = 8
+          else rgb_candy when current_colormap = 9
+          else rgb_candy1 when current_colormap = 10
+          else rgb_anet    when current_colormap = 11
+          else rgb_caramel    when current_colormap = 12
+          else colour(7 downto 5) & '0' & colour(4 downto 2) & '0' & colour(1 downto 0) & "00";
+
+    process(CLK_mem)
+    begin
+      if rising_edge(CLK_mem) then
+        btn_left_old <= btn_left;
+        btn_right_old <= btn_right;
+        rgb_reg <= rgb;
+        if btn_zoom = '1' and btn_left = '1' and btn_left_old = '0' then
+           if current_colormap = 0 then
+              current_colormap <= x"D";
+           else
+              current_colormap <= current_colormap - 1;
+           end if;
+        end if;
+        if btn_zoom = '1' and btn_right = '1' and btn_right_old = '0'  then
+           if current_colormap = 13 then
+              current_colormap <= x"0";
+           else
+              current_colormap <= current_colormap + 1;
+           end if;
+        end if;
+      end if;
+    end process;
+
 end Behavioral;
 

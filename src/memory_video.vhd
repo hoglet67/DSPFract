@@ -143,7 +143,7 @@ vga_proc: process(rv, rm.latch, rm.state,  base_addr_word)
          if rv.display = '1' then
             nv.colour  <= rm.latch(7 downto 0);
          else
-            nv.colour  <= (others => '0');
+            nv.colour  <= (others => '1');
          end if;
       end if;
 
