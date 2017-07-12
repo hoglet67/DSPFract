@@ -59,10 +59,10 @@ ARCHITECTURE behavior OF tbtopmodule IS
    --Inputs
    signal clk_32 : std_logic := '0';
 
-	--BiDirs
+   --BiDirs
    signal mem_data : std_logic_vector(15 downto 0);
 
- 	--Outputs
+   --Outputs
    signal hsync : std_logic;
    signal vsync : std_logic;
    signal colour : std_logic_vector(7 downto 0);
@@ -78,7 +78,7 @@ ARCHITECTURE behavior OF tbtopmodule IS
  
 BEGIN
  
-	-- Instantiate the Unit Under Test (UUT)
+   -- Instantiate the Unit Under Test (UUT)
    uut: TopModule PORT MAP (
           clk_32 => clk_32,
           hsync => hsync,
@@ -96,18 +96,18 @@ BEGIN
    -- Clock process definitions
    clk_32_process :process
    begin
-		clk_32 <= '0';
-		wait for clk_32_period/2;
-		clk_32 <= '1';
-		wait for clk_32_period/2;
+      clk_32 <= '0';
+      wait for clk_32_period/2;
+      clk_32 <= '1';
+      wait for clk_32_period/2;
    end process;
  
 
    -- Stimulus process
    stim_proc: process
-   begin		
+   begin    
       -- hold reset state for 100 ns.
-      wait for 100 ns;	
+      wait for 100 ns;  
 
       wait for clk_32_period*10;
 

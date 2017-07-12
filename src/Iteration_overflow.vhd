@@ -18,23 +18,23 @@ begin
 
 update_proc: process (clk, Iterations_in,overflow_in, overflow_this)
   begin
-		if rising_edge(clk) then
-			if already_overflowed = '1' or overflow_this = '1' then
-				overflow_out   <= '1';
-				iterations_out <= iterations_last;
-			else
-			   overflow_out   <= '0';
-				iterations_out <= iterations_last+1;
-			end if;
-			
-			if iterations_in = x"FF" or overflow_in = '1' then
-				already_overflowed <= '1';
-			else
-				already_overflowed <= '0';
-			end if;
-			
-			iterations_last <= iterations_in;
-		end if;
+      if rising_edge(clk) then
+         if already_overflowed = '1' or overflow_this = '1' then
+            overflow_out   <= '1';
+            iterations_out <= iterations_last;
+         else
+            overflow_out   <= '0';
+            iterations_out <= iterations_last+1;
+         end if;
+         
+         if iterations_in = x"FF" or overflow_in = '1' then
+            already_overflowed <= '1';
+         else
+            already_overflowed <= '0';
+         end if;
+         
+         iterations_last <= iterations_in;
+      end if;
   end process;
 
 end Behavioral;

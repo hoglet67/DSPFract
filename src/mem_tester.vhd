@@ -22,11 +22,11 @@ begin
       if rising_edge(clk) then
          if write_taken = '1' and not(counter  = "111" & x"FFFF") then
             counter <= counter+1;
-				if value = 827 then 
-					value <= (others => '0');
-				else
-					value <= value+1;
-				end if;
+            if value = 827 then 
+               value <= (others => '0');
+            else
+               value <= value+1;
+            end if;
          end if;
       end if;
    end process;

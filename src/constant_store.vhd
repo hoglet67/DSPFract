@@ -5,7 +5,7 @@ entity constant_store is
     Port ( clk     : in  STD_LOGIC;
            address : in  STD_LOGIC_VECTOR (9 downto 0);
            din     : in  STD_LOGIC_VECTOR (35 downto 0);
-			  we      : in  STD_LOGIC;
+           we      : in  STD_LOGIC;
            value   : out STD_LOGIC_VECTOR (35 downto 0));
 end constant_store;
 
@@ -22,7 +22,7 @@ architecture Behavioral of constant_store is
    END COMPONENT;
 
    signal wea : std_logic_vector(0 downto 0);
-	
+   
 begin
  wea(0) <= we;
 

@@ -16,12 +16,12 @@ begin
 
 add_proc : process(x,y,clk, r_x, r_y)
    begin
-	   if rising_edge(clk) then
-			result <= r_x + r_y;
-			r_x <= x;
-			r_y <= y;
-		end if; 
-	end process;
+      if rising_edge(clk) then
+         result <= r_x + r_y;
+         r_x <= x;
+         r_y <= y;
+      end if; 
+   end process;
 
 end Behavioral;
 

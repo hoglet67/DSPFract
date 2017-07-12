@@ -43,23 +43,23 @@ ARCHITECTURE behavior OF tb_memory_video IS
     PORT(
          clk : IN  std_logic;
          nclk : IN  std_logic;
-			
+         
          write_ready : IN  std_logic;
          write_addr  : IN  std_logic_vector(18 downto 0);
          write_byte  : IN  std_logic_vector( 7 downto 0);
          write_taken : OUT  std_logic;
-			
+         
          hsync : OUT  std_logic;
          vsync : OUT  std_logic;
          colour : OUT  std_logic_vector(7 downto 0);
 
-			-- Memory Interface
-			mem_nCE          : out   STD_LOGIC;
-			mem_nWE			  : out   STD_LOGIC;
-			mem_nOE			  : out   STD_LOGIC;
-			mem_data         : inout STD_LOGIC_VECTOR(15 downto 0);
-			mem_addr         : out   STD_LOGIC_VECTOR(17 downto 0)
-			);
+         -- Memory Interface
+         mem_nCE          : out   STD_LOGIC;
+         mem_nWE          : out   STD_LOGIC;
+         mem_nOE          : out   STD_LOGIC;
+         mem_data         : inout STD_LOGIC_VECTOR(15 downto 0);
+         mem_addr         : out   STD_LOGIC_VECTOR(17 downto 0)
+         );
     END COMPONENT;
     
 
@@ -70,7 +70,7 @@ ARCHITECTURE behavior OF tb_memory_video IS
    signal write_addr  : std_logic_vector(18 downto 0) := "1010101010101010101";
    signal write_byte  : std_logic_vector(7 downto 0) := "10011001";
 
- 	--Outputs
+   --Outputs
    signal write_taken : std_logic;
    signal hsync       : std_logic;
    signal vsync       : std_logic;
@@ -78,8 +78,8 @@ ARCHITECTURE behavior OF tb_memory_video IS
    signal mem_addr    : std_logic_vector(17 downto 0);
    signal mem_data    : std_logic_vector(15 downto 0);
    signal mem_nCE     : STD_LOGIC;
-	signal mem_nWE		 : STD_LOGIC;
-	signal mem_nOE		 : STD_LOGIC;
+   signal mem_nWE     : STD_LOGIC;
+   signal mem_nOE     : STD_LOGIC;
 
 
    -- Clock period definitions
@@ -88,7 +88,7 @@ ARCHITECTURE behavior OF tb_memory_video IS
  
 BEGIN
  
-	-- Instantiate the Unit Under Test (UUT)
+   -- Instantiate the Unit Under Test (UUT)
    uut: memory_video PORT MAP (
           clk => clk,
           nclk => nclk,
@@ -99,29 +99,29 @@ BEGIN
           hsync => hsync,
           vsync => vsync,
           colour => colour,
-			 mem_nCE => mem_nCE,
-			 mem_nWE => mem_nWE,
-	       mem_nOE => mem_nOE,
-	       mem_data => mem_data,
-	       mem_addr => mem_addr
-			 );
-			 
+          mem_nCE => mem_nCE,
+          mem_nWE => mem_nWE,
+          mem_nOE => mem_nOE,
+          mem_data => mem_data,
+          mem_addr => mem_addr
+          );
+          
    -- Clock process definitions
    clk_process :process
    begin
-		clk <= '0';
-		nclk <= '1';
-		wait for clk_period/2;
-		clk <= '1';
-		nclk <= '0';
-		wait for clk_period/2;
+      clk <= '0';
+      nclk <= '1';
+      wait for clk_period/2;
+      clk <= '1';
+      nclk <= '0';
+      wait for clk_period/2;
    end process;
  
    -- Stimulus process
    stim_proc: process
-   begin		
+   begin    
       -- hold reset state for 100 ns.
-      wait for 100 ns;	
+      wait for 100 ns;  
 
       wait for clk_period*10;
 

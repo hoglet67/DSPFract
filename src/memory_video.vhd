@@ -8,8 +8,8 @@ use UNISIM.vcomponents.all;
 
 entity memory_video is
     Port ( clk : in  STD_LOGIC;
-			  base_addr_word : in STD_LOGIC_VECTOR (17 downto 0);
-			  
+           base_addr_word : in STD_LOGIC_VECTOR (17 downto 0);
+           
            -- Interface for writes
            write_ready : in  STD_LOGIC;
            write_addr  : in  STD_LOGIC_VECTOR (18 downto 0);
@@ -153,13 +153,13 @@ vga_proc: process(rv, rm.latch, rm.state,  base_addr_word)
 
       -- Decide if we display colour this time
       if rm.state(1 downto 0) = "11" then
-		
-		   if rv.hCounter < hVisible and rv.vCounter < vVisible then
+      
+         if rv.hCounter < hVisible and rv.vCounter < vVisible then
             nv.display    <= '1';
-			else
-            nv.display    <= '0';			
-			end if;
-			
+         else
+            nv.display    <= '0';         
+         end if;
+         
          if rv.increment = '1' then
             nv.read_addr  <= rv.read_addr+1;
          end if;
@@ -180,11 +180,11 @@ mem_proc: process(rm, rv.read_addr, write_ready, write_addr, write_byte, mem_dat
          -- Waiting for the read to settle
 
          -- capture the adderss and value of the new write
-			if write_ready = '0' then
+         if write_ready = '0' then
            nm.hold_addr   <= write_Addr+(base_addr_word&'0');
            nm.hold_byte   <= write_byte;
            nm.write_taken <= '1';
-			end if;
+         end if;
          
       when state_25 =>
          nm.state   <= state_50;

@@ -13,9 +13,9 @@ begin
 process (clk,din)
 begin
    if rising_edge(clk) then
-		dout <= d1;
-	   d1 <= din;
-	end if;
+      dout <= d1;
+      d1 <= din;
+   end if;
 end process;
 
 end Behavioral;

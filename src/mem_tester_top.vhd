@@ -15,13 +15,13 @@ entity mem_tester_top is
            mem_nOE      : out   STD_LOGIC;
            mem_addr     : out   STD_LOGIC_VECTOR (17 downto 0);
            mem_data     : inout STD_LOGIC_VECTOR (15 downto 0);
-			  -- User constrols
-			btn_up		 	  : in  STD_LOGIC;
-			btn_down		  : in  STD_LOGIC;
-			btn_left		  : in  STD_LOGIC;
-			btn_right		  : in  STD_LOGIC;
-			btn_zoomin     : in  STD_LOGIC;
-			btn_zoomout     : in  STD_LOGIC);
+           -- User constrols
+         btn_up           : in  STD_LOGIC;
+         btn_down      : in  STD_LOGIC;
+         btn_left      : in  STD_LOGIC;
+         btn_right        : in  STD_LOGIC;
+         btn_zoomin     : in  STD_LOGIC;
+         btn_zoomout     : in  STD_LOGIC);
 end mem_tester_top;
 
 architecture Behavioral of mem_tester_top is
@@ -48,7 +48,7 @@ component clocking
    COMPONENT memory_video
    PORT(
       clk : IN std_logic;
-		base_addr_word : in STD_LOGIC_VECTOR (17 downto 0);
+      base_addr_word : in STD_LOGIC_VECTOR (17 downto 0);
 
       write_ready : IN std_logic;
       write_addr : IN std_logic_vector(18 downto 0);
@@ -98,7 +98,7 @@ begin
 
    Inst_memory_video: memory_video PORT MAP(
       clk  => clk_mem,
-		base_addr_word => (others => '0'),
+      base_addr_word => (others => '0'),
       write_ready => '1',
       write_addr => write_address,
       write_byte => write_data,
