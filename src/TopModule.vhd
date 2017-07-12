@@ -25,7 +25,16 @@ entity TopModule is
       btn_down      : in  STD_LOGIC;
       btn_left      : in  STD_LOGIC;
       btn_right     : in  STD_LOGIC;
-      btn_zoom      : in  STD_LOGIC);
+      btn_zoom      : in  STD_LOGIC;
+      js1_up        : in  STD_LOGIC;
+      js1_down      : in  STD_LOGIC;
+      js1_left      : in  STD_LOGIC;
+      js1_right     : in  STD_LOGIC;
+      js1_zoom      : in  STD_LOGIC;
+      ARD_RESET     : out STD_LOGIC;
+      SW1           : in  STD_LOGIC
+
+      );
 end TopModule;
 
 architecture Behavioral of TopModule is
@@ -42,6 +51,7 @@ architecture Behavioral of TopModule is
       btn_left       : in  STD_LOGIC;
       btn_right      : in  STD_LOGIC;
       btn_zoom       : in  STD_LOGIC;
+      
       newvalue       : OUT std_logic_vector(35 downto 0);
       storex         : OUT std_logic;
       storey         : OUT std_logic
@@ -161,8 +171,8 @@ architecture Behavioral of TopModule is
    end component;
 
    signal   current_colormap : unsigned (3 downto 0);
-   signal   btn_left_old  : std_logic;
-   signal   btn_right_old  : std_logic;
+   signal   ctrl_left_old  : std_logic;
+   signal   ctrl_right_old  : std_logic;
 
    signal   real_1      : std_logic_vector(35 downto 0);
    signal   imaginary_1 : std_logic_vector(35 downto 0);
@@ -216,7 +226,22 @@ architecture Behavioral of TopModule is
    signal rgb_wild, rgb_tropic, rgb_stargate, rgb_rosewht : std_logic_vector (11 downto 0);
    signal rgb_rose1, rgb_flowers3, rgb_candy, rgb_candy1 : std_logic_vector (11 downto 0);
 
+   signal ctrl_up         : std_logic;
+   signal ctrl_down       : std_logic;
+   signal ctrl_left       : std_logic;
+   signal ctrl_right      : std_logic;
+   signal ctrl_zoom       : std_logic;
+
 begin
+
+   ARD_RESET  <= SW1;
+
+   ctrl_up    <= btn_up    or not(js1_up);
+   ctrl_down  <= btn_down  or not(js1_down);
+   ctrl_left  <= btn_left  or not(js1_left);
+   ctrl_right <= btn_right or not(js1_right);
+   ctrl_zoom  <= btn_zoom  or not(js1_zoom);
+    
    red   <= rgb_reg(11 downto 8);
    green <= rgb_reg(7 downto 4);
    blue  <= rgb_reg(3 downto 0);
@@ -269,11 +294,11 @@ begin
       y              => y_new,
       accepted       => accepted,
       vsync          => vsync_sig,
-      btn_up         => btn_up,
-      btn_down       => btn_down,
-      btn_left       => btn_left,
-      btn_right      => btn_right,
-      btn_zoom     => btn_zoom,
+      btn_up         => ctrl_up,
+      btn_down       => ctrl_down,
+      btn_left       => ctrl_left,
+      btn_right      => ctrl_right,
+      btn_zoom     => ctrl_zoom,
       newvalue       => constant_new,
       storex         => storex_new,
       storey         => storey_new
@@ -454,17 +479,17 @@ begin
     process(CLK_mem)
     begin
       if rising_edge(CLK_mem) then
-        btn_left_old <= btn_left;
-        btn_right_old <= btn_right;
+        ctrl_left_old <= ctrl_left;
+        ctrl_right_old <= ctrl_right;
         rgb_reg <= rgb;
-        if btn_zoom = '1' and btn_left = '1' and btn_left_old = '0' then
+        if ctrl_zoom = '1' and ctrl_left = '1' and ctrl_left_old = '0' then
            if current_colormap = 0 then
               current_colormap <= x"D";
            else
               current_colormap <= current_colormap - 1;
            end if;
         end if;
-        if btn_zoom = '1' and btn_right = '1' and btn_right_old = '0'  then
+        if ctrl_zoom = '1' and ctrl_right = '1' and ctrl_right_old = '0'  then
            if current_colormap = 13 then
               current_colormap <= x"0";
            else
