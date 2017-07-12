@@ -177,7 +177,7 @@ mem_proc: process(rm, rv.read_addr, write_ready, write_addr, write_byte, mem_dat
 
          -- capture the adderss and value of the new write
          if write_ready = '0' then
-           nm.hold_addr   <= write_Addr;
+           nm.hold_addr   <= write_Addr+(base_addr_word&'0');
            nm.hold_byte   <= write_byte;
            nm.write_taken <= '1';
          end if;
