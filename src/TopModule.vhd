@@ -172,7 +172,8 @@ architecture Behavioral of TopModule is
 
    signal   current_colormap : unsigned (3 downto 0);
    signal   ctrl_left_old  : std_logic;
-   signal   ctrl_right_old  : std_logic;
+   signal   ctrl_right_old : std_logic;
+   signal   vsync_sig_old  : std_logic;
 
    signal   real_1      : std_logic_vector(35 downto 0);
    signal   imaginary_1 : std_logic_vector(35 downto 0);
@@ -479,23 +480,29 @@ begin
     process(CLK_mem)
     begin
       if rising_edge(CLK_mem) then
-        ctrl_left_old <= ctrl_left;
-        ctrl_right_old <= ctrl_right;
         rgb_reg <= rgb;
-        if ctrl_zoom = '1' and ctrl_left = '1' and ctrl_left_old = '0' then
-           if current_colormap = 0 then
-              current_colormap <= x"D";
-           else
-              current_colormap <= current_colormap - 1;
+        vsync_sig_old <= vsync_sig;
+        -- Sample the controls on rising edge of vsync, for two reasons
+        -- 1. It give some degree of switch de-bounding
+        -- 2. It prevents a colour map change in the middle of the screen
+        if vsync_sig_old = '0' and vsync_sig = '1' then
+           ctrl_left_old <= ctrl_left;
+           ctrl_right_old <= ctrl_right;
+           if ctrl_zoom = '1' and ctrl_left = '1' and ctrl_left_old = '0' then
+              if current_colormap = 0 then
+                 current_colormap <= x"D";
+              else
+                 current_colormap <= current_colormap - 1;
+              end if;
            end if;
-        end if;
-        if ctrl_zoom = '1' and ctrl_right = '1' and ctrl_right_old = '0'  then
-           if current_colormap = 13 then
-              current_colormap <= x"0";
-           else
-              current_colormap <= current_colormap + 1;
+           if ctrl_zoom = '1' and ctrl_right = '1' and ctrl_right_old = '0'  then
+              if current_colormap = 13 then
+                 current_colormap <= x"0";
+              else
+                 current_colormap <= current_colormap + 1;
+              end if;
            end if;
-        end if;
+         end if;
       end if;
     end process;
 
