@@ -66,10 +66,10 @@ architecture Behavioral of scheduler is
 
    -- Number of zoom steps within a power of two zoom
    constant N : integer := 2;
-   
+
    constant ZOOM_DEPTH : integer := 28 * N - 1;
    constant ZOOM_STEP  : real    := 2.0 ** (1.0 / real(N));
-   
+
    -- Initial zoom level, same as original code
    signal scale : integer range 0 to ZOOM_DEPTH - 1 := 25 * N;
    signal scale_zoom_out : integer range 0 to ZOOM_DEPTH - 1;
@@ -78,7 +78,7 @@ architecture Behavioral of scheduler is
    signal y_offset_zoom_in : std_logic_vector(35 downto 0);
    signal x_offset_zoom_out : std_logic_vector(35 downto 0);
    signal y_offset_zoom_out : std_logic_vector(35 downto 0);
-   
+
    type  scale_ram_t is array (0 to ZOOM_DEPTH - 1) of std_logic_vector(SCALE_RAM_WIDTH - 1 downto 0);
    type offset_ram_t is array (0 to ZOOM_DEPTH - 1) of std_logic_vector(OFFSET_RAM_WIDTH - 1 downto 0);
 
@@ -86,27 +86,38 @@ architecture Behavioral of scheduler is
       variable temp  : scale_ram_t;
    begin
       for i in 0 to ZOOM_DEPTH - 1 loop
-         temp(i) := std_logic_vector(to_unsigned(base * integer(ZOOM_STEP**i), SCALE_RAM_WIDTH)); 
+         temp(i) := std_logic_vector(to_unsigned(base * integer(ZOOM_STEP**i), SCALE_RAM_WIDTH));
       end loop;
       return temp;
    end;
 
-   function init_offset_ram(base : integer) return offset_ram_t is
+   function init_offset_zoom_out_ram(base : integer) return offset_ram_t is
       variable temp  : offset_ram_t;
    begin
       for i in 0 to ZOOM_DEPTH - 1 loop
-         temp(i) := std_logic_vector(to_unsigned(base * integer(ZOOM_STEP**i), OFFSET_RAM_WIDTH)); 
+         temp(i) := std_logic_vector(to_unsigned(base * integer((ZOOM_STEP**i) * (ZOOM_STEP - 1.0)), OFFSET_RAM_WIDTH));
+      end loop;
+      return temp;
+   end;
+
+   function init_offset_zoom_in_ram(base : integer) return offset_ram_t is
+      variable temp  : offset_ram_t;
+   begin
+      for i in 0 to ZOOM_DEPTH - 1 loop
+         temp(i) := std_logic_vector(to_unsigned(base * integer((ZOOM_STEP**i) * (1.0 - 1.0 / ZOOM_STEP)), OFFSET_RAM_WIDTH));
       end loop;
       return temp;
    end;
 
    -- scale ram holds a fixed point value representing the size of one pixel at each zoom level
    constant    scale_ram :  scale_ram_t := init_scale_ram(1);
-   
+
    -- offset ram holds a fixed point value representing half the screen width/hight at each zoom level
-   constant x_offset_ram : offset_ram_t := init_offset_ram(414);
-   constant y_offset_ram : offset_ram_t := init_offset_ram(313);
-    
+   constant x_offset_zoom_in_ram : offset_ram_t := init_offset_zoom_in_ram(414);
+   constant y_offset_zoom_in_ram : offset_ram_t := init_offset_zoom_in_ram(313);
+   constant x_offset_zoom_out_ram : offset_ram_t := init_offset_zoom_out_ram(414);
+   constant y_offset_zoom_out_ram : offset_ram_t := init_offset_zoom_out_ram(313);
+
 begin
    x               <= x_counter;
    y               <= y_counter;
@@ -231,16 +242,16 @@ begin
          scale_zoom_out <= scale + 1;
          scale_zoom_in <= scale - 1;
 
-         y_offset_zoom_out <= y_offset_ram(scale) - y_offset_ram(scale_zoom_out);
-         x_offset_zoom_out <= x_offset_ram(scale) - x_offset_ram(scale_zoom_out);
-         y_offset_zoom_in  <= y_offset_ram(scale) - y_offset_ram(scale_zoom_in);
-         x_offset_zoom_in  <= x_offset_ram(scale) - x_offset_ram(scale_zoom_in);
-         
-         current_top_zoom_out  <= current_top  + y_offset_zoom_out;
-         current_left_zoom_out <= current_left + x_offset_zoom_out;
+         y_offset_zoom_out <= y_offset_zoom_out_ram(scale);
+         x_offset_zoom_out <= x_offset_zoom_out_ram(scale);
+         y_offset_zoom_in <= y_offset_zoom_in_ram(scale);
+         x_offset_zoom_in <= x_offset_zoom_in_ram(scale);
+
+         current_top_zoom_out  <= current_top  - y_offset_zoom_out;
+         current_left_zoom_out <= current_left - x_offset_zoom_out;
          current_top_zoom_in  <= current_top  + y_offset_zoom_in;
          current_left_zoom_in <= current_left + x_offset_zoom_in;
-         
+
          vsync_reclock <= vsync_reclock(0) & vsync;
       end if;
    end process;
