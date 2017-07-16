@@ -72,6 +72,12 @@ architecture Behavioral of scheduler is
    
    -- Initial zoom level, same as original code
    signal scale : integer range 0 to ZOOM_DEPTH - 1 := 25 * N;
+   signal scale_zoom_out : integer range 0 to ZOOM_DEPTH - 1;
+   signal scale_zoom_in : integer range 0 to ZOOM_DEPTH - 1;
+   signal x_offset_zoom_in : std_logic_vector(35 downto 0);
+   signal y_offset_zoom_in : std_logic_vector(35 downto 0);
+   signal x_offset_zoom_out : std_logic_vector(35 downto 0);
+   signal y_offset_zoom_out : std_logic_vector(35 downto 0);
    
    type  scale_ram_t is array (0 to ZOOM_DEPTH - 1) of std_logic_vector(SCALE_RAM_WIDTH - 1 downto 0);
    type offset_ram_t is array (0 to ZOOM_DEPTH - 1) of std_logic_vector(OFFSET_RAM_WIDTH - 1 downto 0);
@@ -201,14 +207,14 @@ begin
                         if scale < ZOOM_DEPTH - 1 and buttons_old(4) = '0' then
                            current_top   <= current_top_zoom_out;
                            current_left  <= current_left_zoom_out;
-                           scale         <= scale + 1;
+                           scale         <= scale_zoom_out;
                         end if;
 
                   when "01001" =>
                         if scale > 0 and buttons_old(3) = '0' then
                            current_top   <= current_top_zoom_in;
                            current_left  <= current_left_zoom_in;
-                           scale         <= scale - 1;
+                           scale         <= scale_zoom_in;
                         end if;
                   when others =>
                   end case;
@@ -222,10 +228,18 @@ begin
          current_scale_add_reg <= current_scale_add;
          current_scale_add <= ("0" & scale_ram(scale) & "0000") - (scale_ram(scale) & "0");
 
-         current_top_zoom_out  <= current_top  + y_offset_ram(scale) - y_offset_ram(scale + 1);
-         current_left_zoom_out <= current_left + x_offset_ram(scale) - x_offset_ram(scale + 1);
-         current_top_zoom_in   <= current_top  + y_offset_ram(scale) - y_offset_ram(scale - 1);
-         current_left_zoom_in  <= current_left + x_offset_ram(scale) - x_offset_ram(scale - 1);
+         scale_zoom_out <= scale + 1;
+         scale_zoom_in <= scale - 1;
+
+         y_offset_zoom_out <= y_offset_ram(scale) - y_offset_ram(scale_zoom_out);
+         x_offset_zoom_out <= x_offset_ram(scale) - x_offset_ram(scale_zoom_out);
+         y_offset_zoom_in  <= y_offset_ram(scale) - y_offset_ram(scale_zoom_in);
+         x_offset_zoom_in  <= x_offset_ram(scale) - x_offset_ram(scale_zoom_in);
+         
+         current_top_zoom_out  <= current_top  + y_offset_zoom_out;
+         current_left_zoom_out <= current_left + x_offset_zoom_out;
+         current_top_zoom_in  <= current_top  + y_offset_zoom_in;
+         current_left_zoom_in <= current_left + x_offset_zoom_in;
          
          vsync_reclock <= vsync_reclock(0) & vsync;
       end if;
