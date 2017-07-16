@@ -1,6 +1,8 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.STD_LOGIC_UNSIGNED.ALL;
+use IEEE.NUMERIC_STD.ALL;
+use IEEE.MATH_REAL.ALL;
 
 entity scheduler is
     Port ( clk : in  STD_LOGIC;
@@ -37,9 +39,9 @@ architecture Behavioral of scheduler is
    signal redraw_bottom         : std_logic_vector(9 downto 0) := "1100111011";
    signal current_top           : std_logic_vector(35 downto 0) := x"E00000000";
    signal current_left          : std_logic_vector(35 downto 0) := x"D00000000";
-   signal current_scale         : std_logic_vector(27 downto 0) := x"2000000";
-   signal zoom_x_offset         : std_logic_vector(35 downto 0) := x"33C000000";
-   signal zoom_y_offset         : std_logic_vector(35 downto 0) := x"272000000";
+--   signal current_scale         : std_logic_vector(27 downto 0) :=   x"2000000";
+--   signal zoom_x_offset         : std_logic_vector(35 downto 0) := x"33C000000";
+--   signal zoom_y_offset         : std_logic_vector(35 downto 0) := x"272000000";
    signal current_scale_add     : std_logic_vector(32 downto 0) := (others => '0');
    signal current_scale_add_reg : std_logic_vector(32 downto 0) := (others => '0');
    signal current_top_zoom_out  : std_logic_vector(35 downto 0) := (others => '0');
@@ -56,6 +58,49 @@ architecture Behavioral of scheduler is
    signal storex_sig         : std_logic := '0';
    signal storey_sig         : std_logic := '0';
    signal newvalue_sig       : STD_LOGIC_VECTOR (35 downto 0);
+
+   -- lookup tables for scale, x-offset, y-offset
+
+   constant SCALE_RAM_WIDTH  : integer := 28;
+   constant OFFSET_RAM_WIDTH : integer := 36;
+
+   -- Number of zoom steps within a power of two zoom
+   constant N : integer := 2;
+   
+   constant ZOOM_DEPTH : integer := 28 * N - 1;
+   constant ZOOM_STEP  : real    := 2.0 ** (1.0 / real(N));
+   
+   -- Initial zoom level, same as original code
+   signal scale : integer range 0 to ZOOM_DEPTH - 1 := 25 * N;
+   
+   type  scale_ram_t is array (0 to ZOOM_DEPTH - 1) of std_logic_vector(SCALE_RAM_WIDTH - 1 downto 0);
+   type offset_ram_t is array (0 to ZOOM_DEPTH - 1) of std_logic_vector(OFFSET_RAM_WIDTH - 1 downto 0);
+
+   function init_scale_ram(base : integer) return scale_ram_t is
+      variable temp  : scale_ram_t;
+   begin
+      for i in 0 to ZOOM_DEPTH - 1 loop
+         temp(i) := std_logic_vector(to_unsigned(base * integer(ZOOM_STEP**i), SCALE_RAM_WIDTH)); 
+      end loop;
+      return temp;
+   end;
+
+   function init_offset_ram(base : integer) return offset_ram_t is
+      variable temp  : offset_ram_t;
+   begin
+      for i in 0 to ZOOM_DEPTH - 1 loop
+         temp(i) := std_logic_vector(to_unsigned(base * integer(ZOOM_STEP**i), OFFSET_RAM_WIDTH)); 
+      end loop;
+      return temp;
+   end;
+
+   -- scale ram holds a fixed point value representing the size of one pixel at each zoom level
+   constant    scale_ram :  scale_ram_t := init_scale_ram(1);
+   
+   -- offset ram holds a fixed point value representing half the screen width/hight at each zoom level
+   constant x_offset_ram : offset_ram_t := init_offset_ram(414);
+   constant y_offset_ram : offset_ram_t := init_offset_ram(313);
+    
 begin
    x               <= x_counter;
    y               <= y_counter;
@@ -83,7 +128,7 @@ begin
                   end if;
                   storex_sig   <= '1';
                   x_counter    <= x_counter+1;
-                  newvalue_sig <= newvalue_sig + current_scale;
+                  newvalue_sig <= newvalue_sig + scale_ram(scale);
                end if;
 
             when update_constants_y_start =>
@@ -95,7 +140,7 @@ begin
 
             when update_constants_y =>
                if accepted = '1' then
-                  newvalue_sig <= newvalue_sig + current_scale;
+                  newvalue_sig <= newvalue_sig + scale_ram(scale);
                   storey_sig <= '1';
                   if y_counter = 627 then
                      mode <= start_redraw;
@@ -153,21 +198,17 @@ begin
                         redraw_left <= "0000000000"+814;
 
                   when "10001" =>
-                        if  current_scale(27) = '0' and buttons_old(4) = '0' then
+                        if scale < ZOOM_DEPTH - 1 and buttons_old(4) = '0' then
                            current_top   <= current_top_zoom_out;
                            current_left  <= current_left_zoom_out;
-                           current_scale <= current_scale(26 downto 0) & '0';
-                           zoom_x_offset <= zoom_x_offset(34 downto 0) & '0';
-                           zoom_y_offset <= zoom_y_offset(34 downto 0) & '0';
+                           scale         <= scale + 1;
                         end if;
 
                   when "01001" =>
-                        if current_scale(0) = '0' and buttons_old(3) = '0' then
+                        if scale > 0 and buttons_old(3) = '0' then
                            current_top   <= current_top_zoom_in;
                            current_left  <= current_left_zoom_in;
-                           current_scale <= '0' & current_scale(27 downto 1);
-                           zoom_x_offset <= '0' & zoom_x_offset(35 downto 1);
-                           zoom_y_offset <= '0' & zoom_y_offset(35 downto 1);
+                           scale         <= scale - 1;
                         end if;
                   when others =>
                   end case;
@@ -179,12 +220,13 @@ begin
          end case;
 
          current_scale_add_reg <= current_scale_add;
-         current_scale_add <= ("0" & current_scale & "0000") - (current_scale & "0");
+         current_scale_add <= ("0" & scale_ram(scale) & "0000") - (scale_ram(scale) & "0");
 
-         current_top_zoom_out  <= current_top  - zoom_y_offset(34 downto 0);
-         current_left_zoom_out <= current_left - zoom_x_offset(34 downto 0);
-         current_top_zoom_in   <= current_top  + zoom_y_offset(35 downto 1);
-         current_left_zoom_in  <= current_left + zoom_x_offset(35 downto 1);
+         current_top_zoom_out  <= current_top  + y_offset_ram(scale) - y_offset_ram(scale + 1);
+         current_left_zoom_out <= current_left + x_offset_ram(scale) - x_offset_ram(scale + 1);
+         current_top_zoom_in   <= current_top  + y_offset_ram(scale) - y_offset_ram(scale - 1);
+         current_left_zoom_in  <= current_left + x_offset_ram(scale) - x_offset_ram(scale - 1);
+         
          vsync_reclock <= vsync_reclock(0) & vsync;
       end if;
    end process;
