@@ -89,7 +89,7 @@ begin
             CLKOUT0_DIVIDE       => 12,      -- 950 / 12 = 79.16MHz
             CLKOUT0_PHASE        => 0.000,
             CLKOUT0_DUTY_CYCLE   => 0.500,
-            CLKOUT1_DIVIDE       => 6,       -- 950 / 4 = 237.5MHz; 950 / 6 = 158.3MHz
+            CLKOUT1_DIVIDE       => 4,       -- 950 / 4 = 237.5MHz; 950 / 6 = 158.3MHz
             CLKOUT1_PHASE        => 0.000,
             CLKOUT1_DUTY_CYCLE   => 0.500,
             CLKIN_PERIOD         => 20.000,
