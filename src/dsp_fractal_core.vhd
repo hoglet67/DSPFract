@@ -54,8 +54,19 @@ architecture Behavioral of dsp_fractal_core is
     signal x_2                 : std_logic_vector(9 downto 0);
     signal y_2                 : std_logic_vector(9 downto 0);
     signal iterations_2        : std_logic_vector(7 downto 0);
+    signal constant_2          : std_logic_vector(35 downto 0);
     signal overflow_2          : std_logic;
+    signal storex_2            : std_logic;
+    signal storey_2            : std_logic;
     signal active_2            : std_logic;
+
+    signal real_3              : std_logic_vector(35 downto 0);
+    signal imaginary_3         : std_logic_vector(35 downto 0);
+    signal x_3                 : std_logic_vector(9 downto 0);
+    signal y_3                 : std_logic_vector(9 downto 0);
+    signal iterations_3        : std_logic_vector(7 downto 0);
+    signal overflow_3          : std_logic;
+    signal active_3            : std_logic;
 
     signal x_new               : std_logic_vector(9 downto 0) := (others => '0');
     signal y_new               : std_logic_vector(9 downto 0) := (others => '0');
@@ -174,13 +185,13 @@ begin
             result_valid      => result_valid,
             output_fifo_full  => output_fifo_full,
 
-            iterations_in     => iterations_2,
-            overflow_in       => overflow_2,
-            real_in           => real_2,
-            imaginary_in      => imaginary_2,
-            x_in              => x_2,
-            y_in              => y_2,
-            active_in         => active_2,
+            iterations_in     => iterations_3,
+            overflow_in       => overflow_3,
+            real_in           => real_3,
+            imaginary_in      => imaginary_3,
+            x_in              => x_3,
+            y_in              => y_3,
+            active_in         => active_3,
 
             iterations_out    => iterations_1,
             overflow_out      => overflow_1,
@@ -194,7 +205,7 @@ begin
             active_out        => active_1
             );
 
-    Inst_mandelbrot_stage: entity work.mandelbrot_stage
+    Inst_mandelbrot_stage1: entity work.mandelbrot_stage
         port map (
             clk               => clk_core,
             iterations_in     => iterations_1,
@@ -214,10 +225,36 @@ begin
             imaginary_out     => imaginary_2,
             x_out             => x_2,
             y_out             => y_2,
+            constant_out      => constant_2,
+            storex_out        => storex_2,
+            storey_out        => storey_2,
+            active_out        => active_2
+            );
+
+    Inst_mandelbrot_stage2: entity work.mandelbrot_stage
+        port map (
+            clk               => clk_core,
+            iterations_in     => iterations_2,
+            overflow_in       => overflow_2,
+            real_in           => real_2,
+            imaginary_in      => imaginary_2,
+            x_in              => x_2,
+            y_in              => y_2,
+            constant_in       => constant_2,
+            storex_in         => storex_2,
+            storey_in         => storey_2,
+            active_in         => active_2,
+
+            iterations_out    => iterations_3,
+            overflow_out      => overflow_3,
+            real_out          => real_3,
+            imaginary_out     => imaginary_3,
+            x_out             => x_3,
+            y_out             => y_3,
             constant_out      => open,
             storex_out        => open,
             storey_out        => open,
-            active_out        => active_2
+            active_out        => active_3
             );
 
     -- Color Maps
