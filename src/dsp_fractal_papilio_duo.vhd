@@ -68,6 +68,10 @@ begin
             );
 
     core_inst : entity work.dsp_fractal_core
+        generic map (
+            use_two_mandelbrot_stages => false;
+            use_small_sqr35           => false
+        )
         port map (
             -- Clocks
             clk_mem    => clk_mem,
@@ -85,7 +89,7 @@ begin
             mem_addr   => mem_addr,
             mem_data   => mem_data,
             -- User constrols
-            max_iters  => (others => '1'),
+            max_iters  => x"3FF",
             ctrl_up    => ctrl_up,
             ctrl_down  => ctrl_down,
             ctrl_left  => ctrl_left,

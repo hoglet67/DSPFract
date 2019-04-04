@@ -133,6 +133,10 @@ begin
     ------------------------------------------------
 
     core_inst : entity work.dsp_fractal_core
+        generic map (
+            use_two_mandelbrot_stages => false,
+            use_small_sqr35           => true
+            )
         port map (
             -- Clocks
             clk_mem    => clk_mem,

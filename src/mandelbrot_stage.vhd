@@ -4,134 +4,38 @@ use IEEE.STD_LOGIC_1164.ALL;
 use work.dsp_fractal_defs.all;
 
 entity mandelbrot_stage is
-    Port ( clk            : in  STD_LOGIC;
+    generic (
+        use_small_sqr35  : boolean
+        );
+    port (
+        clk            : in  STD_LOGIC;
 
-           max_iters_in   : in  iterations_type;
+        max_iters_in   : in  iterations_type;
 
-           iterations_in  : in  iterations_type;
-           overflow_in    : in  STD_LOGIC;
-           real_in        : in  STD_LOGIC_VECTOR (35 downto 0);
-           imaginary_in   : in  STD_LOGIC_VECTOR (35 downto 0);
-           x_in           : in  STD_LOGIC_VECTOR (9 downto 0);
-           y_in           : in  STD_LOGIC_VECTOR (9 downto 0);
-           constant_in    : in  STD_LOGIC_VECTOR (35 downto 0);
-           storex_in      : in  STD_LOGIC;
-           storey_in      : in  STD_LOGIC;
-           active_in      : in  STD_LOGIC;
+        iterations_in  : in  iterations_type;
+        overflow_in    : in  STD_LOGIC;
+        real_in        : in  STD_LOGIC_VECTOR (35 downto 0);
+        imaginary_in   : in  STD_LOGIC_VECTOR (35 downto 0);
+        x_in           : in  STD_LOGIC_VECTOR (9 downto 0);
+        y_in           : in  STD_LOGIC_VECTOR (9 downto 0);
+        constant_in    : in  STD_LOGIC_VECTOR (35 downto 0);
+        storex_in      : in  STD_LOGIC;
+        storey_in      : in  STD_LOGIC;
+        active_in      : in  STD_LOGIC;
 
-           iterations_out : out iterations_type;
-           overflow_out   : out STD_LOGIC;
-           real_out       : out STD_LOGIC_VECTOR (35 downto 0);
-           imaginary_out  : out STD_LOGIC_VECTOR (35 downto 0);
-           x_out          : out STD_LOGIC_VECTOR (9 downto 0);
-           y_out          : out STD_LOGIC_VECTOR (9 downto 0);
-           constant_out   : out STD_LOGIC_VECTOR (35 downto 0);
-           storex_out     : out STD_LOGIC;
-           storey_out     : out STD_LOGIC;
-           active_out     : out STD_LOGIC);
+        iterations_out : out iterations_type;
+        overflow_out   : out STD_LOGIC;
+        real_out       : out STD_LOGIC_VECTOR (35 downto 0);
+        imaginary_out  : out STD_LOGIC_VECTOR (35 downto 0);
+        x_out          : out STD_LOGIC_VECTOR (9 downto 0);
+        y_out          : out STD_LOGIC_VECTOR (9 downto 0);
+        constant_out   : out STD_LOGIC_VECTOR (35 downto 0);
+        storex_out     : out STD_LOGIC;
+        storey_out     : out STD_LOGIC;
+        active_out     : out STD_LOGIC);
 end mandelbrot_stage;
 
 architecture Behavioral of mandelbrot_stage is
-   COMPONENT mult35
-   PORT(
-      clk : IN std_logic;
-      x : IN std_logic_vector(34 downto 0);
-      y : IN std_logic_vector(34 downto 0);
-      result : OUT std_logic_vector(37 downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT sqr35
-   PORT(
-      clk    : IN  std_logic;
-      x      : IN  std_logic_vector(34 downto 0);
-      result : OUT std_logic_vector(37 downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT addn
-   Generic (width : natural);
-   PORT(
-      clk    : IN  std_logic;
-      x      : IN  std_logic_vector(width-1 downto 0);
-      y      : IN  std_logic_vector(width-1 downto 0);
-      result : OUT std_logic_vector(width downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT subn
-   Generic (width : natural);
-   PORT(
-      clk    : IN  std_logic;
-      x      : IN  std_logic_vector(width-1 downto 0);
-      y      : IN  std_logic_vector(width-1 downto 0);
-      result : OUT std_logic_vector(width downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT Iteration_overflow
-   PORT(
-      clk            : IN  std_logic;
-      max_iters_in   : IN  iterations_type;
-      Iterations_in  : IN  iterations_type;
-      Overflow_in    : IN  std_logic;
-      Overflow_this  : IN  std_logic;
-      Iterations_out : OUT iterations_type;
-      Overflow_out   : OUT std_logic
-      );
-   END COMPONENT;
-
-   COMPONENT constant_store
-   PORT(
-      clk : IN std_logic;
-      address : IN std_logic_vector(9 downto 0);
-      din : IN std_logic_vector(35 downto 0);
-      we : IN std_logic;
-      value : OUT std_logic_vector(35 downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT delay2cycles
-   PORT(
-      clk  : IN  std_logic;
-      din  : IN  std_logic_vector(38 downto 0);
-      dout : OUT std_logic_vector(38 downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT tapped_delay
-   Generic (depth : natural;
-            width : natural;
-            tap   : natural);
-   PORT(
-      clk     : IN  std_logic;
-      n_in    : IN  std_logic_vector(width-1 downto 0);
-      tap_out : OUT std_logic_vector(width-1 downto 0);
-      n_out   : OUT std_logic_vector(width-1 downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT untapped_delay
-   Generic (depth : natural;
-            width : natural);
-   PORT(
-      clk     : IN  std_logic;
-      n_in    : IN  std_logic_vector(width-1 downto 0);
-      n_out   : OUT std_logic_vector(width-1 downto 0)
-      );
-   END COMPONENT;
-
-   COMPONENT early_overflow
-   PORT(
-      clk : IN std_logic;
-      real_in : IN std_logic_vector(35 downto 0);
-      imaginary_in : IN std_logic_vector(35 downto 0);
-      real_out : OUT std_logic_vector(34 downto 0);
-      imaginary_out : OUT std_logic_vector(34 downto 0);
-      early_overflow : OUT std_logic
-      );
-   END COMPONENT;
-
    signal real_post_check      : std_logic_vector(34 downto 0) := (others => '0');
    signal imaginary_post_check : std_logic_vector(34 downto 0) := (others => '0');
 
@@ -201,7 +105,7 @@ begin
    real_const_ex      <= real_const(35)      & real_const(35)      & real_const(35)      & real_const;
    imaginary_const_ex <= imaginary_const(35) & imaginary_const(35) & imaginary_const(35) & imaginary_const;
 
-   early_overflow_check: early_overflow PORT MAP(
+   early_overflow_check: entity work.early_overflow PORT MAP(
      clk           => clk,
      real_in       => real_in,
      imaginary_in  => imaginary_in,
@@ -210,32 +114,53 @@ begin
      early_overflow=> early_overflow_result(0)
    );
 
-   Inst_delay2cycles: delay2cycles PORT MAP(
+   Inst_delay2cycles: entity work.delay2cycles PORT MAP(
       clk => clk,
       din => real_imaginary_two,
       dout => real_imaginary_two_delayed
    );
 
-   mult35_ab2: mult35 PORT MAP(
+   mult35_ab2: entity work.mult35 PORT MAP(
       clk => clk,
       x   => real_post_check,
       y   => imaginary_post_check,
       result => real_imaginary
    );
 
-   sqr35_real: sqr35 PORT MAP(
-      clk    => clk,
-      x      => real_post_check,
-      result => real_squared
-   );
+   orig_sqr35: if not use_small_sqr35 generate
 
-   sqr35_imaginary: sqr35 PORT MAP(
-      clk    => clk,
-      x      => imaginary_post_check,
-      result => imaginary_squared
-   );
+       sqr35_real: entity work.sqr35 PORT MAP(
+           clk    => clk,
+           x      => real_post_check,
+           result => real_squared
+           );
 
-   addn_magnitude: addn GENERIC MAP (
+       sqr35_imaginary: entity work.sqr35 PORT MAP(
+           clk    => clk,
+           x      => imaginary_post_check,
+           result => imaginary_squared
+           );
+
+   end generate;
+
+   small_sqr35: if use_small_sqr35 generate
+
+       sqr35_real: entity work.small_sqr35 PORT MAP(
+           clk    => clk,
+           x      => real_post_check,
+           result => real_squared
+           );
+
+       sqr35_imaginary: entity work.small_sqr35 PORT MAP(
+           clk    => clk,
+           x      => imaginary_post_check,
+           result => imaginary_squared
+           );
+
+   end generate;
+
+
+   addn_magnitude: entity work.addn GENERIC MAP (
       width => 38
    ) PORT MAP (
       clk => clk,
@@ -244,7 +169,7 @@ begin
       result => magnitude
    );
 
-   subn_newreal: subn GENERIC MAP (
+   subn_newreal: entity work.subn GENERIC MAP (
       width => 38
    )PORT MAP(
       clk => clk,
@@ -253,7 +178,7 @@ begin
       result => new_real
    );
 
-   addn_real_out: addn GENERIC MAP (
+   addn_real_out: entity work.addn GENERIC MAP (
       width => 39
    )PORT MAP(
       clk => clk,
@@ -262,7 +187,7 @@ begin
       result => real_result
    );
 
-   add_new_imaginary: addn GENERIC MAP (
+   add_new_imaginary: entity work.addn GENERIC MAP (
       width => 39
    )PORT MAP(
       clk => clk,
@@ -271,7 +196,7 @@ begin
       result => imaginary_result
    );
 
-   Iteration_overflow_test: Iteration_overflow PORT MAP(
+   Iteration_overflow_test: entity work.Iteration_overflow PORT MAP(
       clk => clk,
       max_iters_in => max_iters_in,
       Iterations_in => Iterations_in_delayed,
@@ -281,7 +206,7 @@ begin
       Overflow_out => Overflow_out_v(0)
    );
 
-   real_constant_store: constant_store PORT MAP(
+   real_constant_store: entity work.constant_store PORT MAP(
       clk     => clk,
       address => x_addr,
       din     => const_to_write,
@@ -289,7 +214,7 @@ begin
       value   => real_const
    );
 
-   imaginary_constant_store: constant_store PORT MAP(
+   imaginary_constant_store: entity work.constant_store PORT MAP(
       clk     => clk,
       address => y_addr,
       din     => const_to_write,
@@ -297,7 +222,7 @@ begin
       value   => imaginary_const
    );
 
-   x_tapped_delay: tapped_delay GENERIC MAP (width => 10, depth => 12, tap => 7)
+   x_tapped_delay: entity work.tapped_delay GENERIC MAP (width => 10, depth => 12, tap => 7)
    PORT MAP(
       clk => clk,
       n_in => x_in,
@@ -305,7 +230,7 @@ begin
       n_out => x_out
    );
 
-   y_tapped_delay: tapped_delay GENERIC MAP (width => 10, depth => 12, tap => 7)
+   y_tapped_delay: entity work.tapped_delay GENERIC MAP (width => 10, depth => 12, tap => 7)
    PORT MAP(
       clk => clk,
       n_in => y_in,
@@ -313,7 +238,7 @@ begin
       n_out => y_out
    );
 
-   const_tapped_delay: tapped_delay GENERIC MAP (width => 36, depth => 12, tap => 7)
+   const_tapped_delay: entity work.tapped_delay GENERIC MAP (width => 36, depth => 12, tap => 7)
    PORT MAP(
       clk => clk,
       n_in => constant_in,
@@ -321,49 +246,49 @@ begin
       n_out => constant_out
    );
 
-   active_delay: untapped_delay GENERIC MAP (width => 1, depth => 12)
+   active_delay: entity work.untapped_delay GENERIC MAP (width => 1, depth => 12)
    PORT MAP(
       clk => clk,
       n_in => active_in_v,
       n_out =>active_out_v
    );
 
-   early_overflow_untapped_delay: untapped_delay GENERIC MAP (width => 1, depth => 9)
+   early_overflow_untapped_delay: entity work.untapped_delay GENERIC MAP (width => 1, depth => 9)
    PORT MAP(
       clk => clk,
       n_in => early_overflow_result,
       n_out => early_overflow_delayed
    );
 
-   overflow_in_untapped_delay: untapped_delay GENERIC MAP (width => 1, depth => 9)
+   overflow_in_untapped_delay: entity work.untapped_delay GENERIC MAP (width => 1, depth => 9)
    PORT MAP(
       clk => clk,
       n_in => overflow_in_v,
       n_out => overflow_in_delayed
    );
 
-   overflow_out_untapped_delay: untapped_delay GENERIC MAP (width => 1, depth => 0)
+   overflow_out_untapped_delay: entity work.untapped_delay GENERIC MAP (width => 1, depth => 0)
    PORT MAP(
       clk => clk,
       n_in => overflow_out_v,
       n_out => overflow_out_delayed
    );
 
-   iterations_in_untapped_delay: untapped_delay GENERIC MAP (width => iterations_type'length, depth => 9)
+   iterations_in_untapped_delay: entity work.untapped_delay GENERIC MAP (width => iterations_type'length, depth => 9)
    PORT MAP(
       clk => clk,
       n_in => iterations_in,
       n_out => iterations_in_delayed
    );
 
-   iterations_out_untapped_delay: untapped_delay GENERIC MAP (width => iterations_type'length, depth => 0)
+   iterations_out_untapped_delay: entity work.untapped_delay GENERIC MAP (width => iterations_type'length, depth => 0)
    PORT MAP(
       clk => clk,
       n_in => iterations_out_predelay,
       n_out => iterations_out
    );
 
-   storex_tapped_delay: tapped_delay GENERIC MAP (width => 1, depth => 12, tap => 7)
+   storex_tapped_delay: entity work.tapped_delay GENERIC MAP (width => 1, depth => 12, tap => 7)
    PORT MAP(
       clk => clk,
       n_in => storex_in_v,
@@ -371,7 +296,7 @@ begin
       n_out => storex_out_v
    );
 
-   storey_tapped_delay: tapped_delay GENERIC MAP (width => 1, depth => 12, tap => 7)
+   storey_tapped_delay: entity work.tapped_delay GENERIC MAP (width => 1, depth => 12, tap => 7)
    PORT MAP(
       clk => clk,
       n_in => storey_in_v,
