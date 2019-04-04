@@ -85,6 +85,7 @@ begin
             mem_addr   => mem_addr,
             mem_data   => mem_data,
             -- User constrols
+            max_iters  => (others => '1'),
             ctrl_up    => ctrl_up,
             ctrl_down  => ctrl_down,
             ctrl_left  => ctrl_left,

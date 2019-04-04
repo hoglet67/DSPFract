@@ -2,6 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.dsp_fractal_defs.all;
+
 entity dsp_fractal_core is
     Port (
         -- Clocks
@@ -23,6 +25,7 @@ entity dsp_fractal_core is
         mem_data   : inout std_logic_vector(7 downto 0);
 
         -- User constrols
+        max_iters  : in    iterations_type;
         ctrl_up    : in    std_logic;
         ctrl_down  : in    std_logic;
         ctrl_left  : in    std_logic;
@@ -42,7 +45,7 @@ architecture Behavioral of dsp_fractal_core is
     signal imaginary_1         : std_logic_vector(35 downto 0);
     signal x_1                 : std_logic_vector(9 downto 0);
     signal y_1                 : std_logic_vector(9 downto 0);
-    signal iterations_1        : std_logic_vector(7 downto 0);
+    signal iterations_1        : iterations_type;
     signal constant_1          : std_logic_vector(35 downto 0);
     signal overflow_1          : std_logic;
     signal storex_1            : std_logic;
@@ -53,7 +56,7 @@ architecture Behavioral of dsp_fractal_core is
     signal imaginary_2         : std_logic_vector(35 downto 0);
     signal x_2                 : std_logic_vector(9 downto 0);
     signal y_2                 : std_logic_vector(9 downto 0);
-    signal iterations_2        : std_logic_vector(7 downto 0);
+    signal iterations_2        : iterations_type;
     signal constant_2          : std_logic_vector(35 downto 0);
     signal overflow_2          : std_logic;
     signal storex_2            : std_logic;
@@ -64,7 +67,7 @@ architecture Behavioral of dsp_fractal_core is
     signal imaginary_3         : std_logic_vector(35 downto 0);
     signal x_3                 : std_logic_vector(9 downto 0);
     signal y_3                 : std_logic_vector(9 downto 0);
-    signal iterations_3        : std_logic_vector(7 downto 0);
+    signal iterations_3        : iterations_type;
     signal overflow_3          : std_logic;
     signal active_3            : std_logic;
 
@@ -78,7 +81,7 @@ architecture Behavioral of dsp_fractal_core is
 
     signal x_result            : std_logic_vector(9 downto 0);
     signal y_result            : std_logic_vector(9 downto 0);
-    signal iterations_result   : std_logic_vector(7 downto 0);
+    signal iterations_result   : iterations_type;
 
     signal write_byte          : std_logic_vector(7 downto 0);
     signal write_address       : std_logic_vector(18 downto 0);
@@ -120,7 +123,7 @@ begin
             clk_core    => clk_core,
             x_in        => x_result,
             y_in        => y_result,
-            data_in     => iterations_result ,
+            data_in     => iterations_result(7 downto 0) ,
             clk_mem     => clk_mem,
             write_data  => result_valid,
             fifo_full   => output_fifo_full,
@@ -208,6 +211,8 @@ begin
     Inst_mandelbrot_stage1: entity work.mandelbrot_stage
         port map (
             clk               => clk_core,
+            max_iters_in      => max_iters,
+
             iterations_in     => iterations_1,
             overflow_in       => overflow_1,
             real_in           => real_1,
@@ -234,6 +239,8 @@ begin
     Inst_mandelbrot_stage2: entity work.mandelbrot_stage
         port map (
             clk               => clk_core,
+            max_iters_in      => max_iters,
+
             iterations_in     => iterations_2,
             overflow_in       => overflow_2,
             real_in           => real_2,

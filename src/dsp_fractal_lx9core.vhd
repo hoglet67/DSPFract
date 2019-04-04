@@ -5,6 +5,8 @@ use ieee.numeric_std.all;
 library unisim;
 use unisim.vcomponents.all;
 
+use work.dsp_fractal_defs.all;
+
 entity dsp_fractal_lx9core is
     Port (
         -- System oscillator
@@ -65,6 +67,8 @@ architecture Behavioral of dsp_fractal_lx9core is
     signal clkfb      : std_logic;
     signal clk0       : std_logic;
     signal clk1       : std_logic;
+
+    signal max_iters  : std_logic_vector(15 downto 0);
 
 begin
 
@@ -146,6 +150,7 @@ begin
             mem_addr   => ram_addr,
             mem_data   => ram_data,
             -- User constrols
+            max_iters  => max_iters(iterations_type'range),
             ctrl_up    => ctrl_up,
             ctrl_down  => ctrl_down,
             ctrl_left  => ctrl_left,
@@ -157,8 +162,8 @@ begin
     -- Bus Interface
     ------------------------------------------------
 
-    -- Decode 0xFCA8
-    selected <= '1' when pgfc_n = '0' and bus_addr = x"A8" else '0';
+    -- Decode 0xFCA8-0xFCAB
+    selected <= '1' when pgfc_n = '0' and bus_addr(7 downto 2) & "00"  = x"A8" else '0';
 
     -- Writes to the control register
     bus_interface_fc : process(clke)
@@ -166,8 +171,13 @@ begin
         if falling_edge(clke) then
             if rst_n = '0' then
                 ctrl_reg  <= x"00";
-            elsif selected = '1' and rnw = '0' then
-                ctrl_reg  <= bus_data;
+                max_iters <= x"00FF";
+            elsif rnw = '0' and selected = '1' then
+                case bus_addr(1 downto 0) is
+                    when "10"   => max_iters(7 downto 0)  <= bus_data;
+                    when "11"   => max_iters(15 downto 8)  <= bus_data;
+                    when others => ctrl_reg  <= bus_data;
+                end case;
             end if;
         end if;
     end process;
@@ -182,9 +192,13 @@ begin
     irq          <= '0';
     nmi          <= '0';
 
+
     bus_data_oel <= not selected;
     bus_data_dir <= rnw;
-    bus_data     <= ctrl_reg when rnw = '1' and selected = '1' else (others => 'Z');
+    bus_data     <= ctrl_reg                when rnw = '1' and selected = '1' and bus_addr(1) = '1' else
+                    max_iters(15 downto 8)  when rnw = '1' and selected = '1' and bus_addr(0) = '1' else
+                    max_iters( 7 downto 0)  when rnw = '1' and selected = '1'                       else
+                    (others => 'Z');
 
     pmod0        <= blue & red;
     pmod1        <= '0' & '0' & vsync & hsync & green ;

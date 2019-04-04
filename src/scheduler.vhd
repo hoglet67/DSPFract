@@ -67,7 +67,7 @@ architecture Behavioral of scheduler is
    -- Number of zoom steps within a power of two zoom
    constant N : integer := 2;
 
-   constant ZOOM_DEPTH : integer := 28 * N - 1;
+   constant ZOOM_DEPTH : integer := 32 * N - 1;
    constant ZOOM_STEP  : real    := 2.0 ** (1.0 / real(N));
 
    -- Initial zoom level, same as original code

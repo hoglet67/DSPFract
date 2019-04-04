@@ -1,10 +1,14 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
+use work.dsp_fractal_defs.all;
+
 entity mandelbrot_stage is
     Port ( clk            : in  STD_LOGIC;
-    
-           iterations_in  : in  STD_LOGIC_VECTOR (7 downto 0);
+
+           max_iters_in   : in  iterations_type;
+
+           iterations_in  : in  iterations_type;
            overflow_in    : in  STD_LOGIC;
            real_in        : in  STD_LOGIC_VECTOR (35 downto 0);
            imaginary_in   : in  STD_LOGIC_VECTOR (35 downto 0);
@@ -14,8 +18,8 @@ entity mandelbrot_stage is
            storex_in      : in  STD_LOGIC;
            storey_in      : in  STD_LOGIC;
            active_in      : in  STD_LOGIC;
-           
-           iterations_out : out STD_LOGIC_VECTOR (7 downto 0);
+
+           iterations_out : out iterations_type;
            overflow_out   : out STD_LOGIC;
            real_out       : out STD_LOGIC_VECTOR (35 downto 0);
            imaginary_out  : out STD_LOGIC_VECTOR (35 downto 0);
@@ -32,7 +36,7 @@ architecture Behavioral of mandelbrot_stage is
    PORT(
       clk : IN std_logic;
       x : IN std_logic_vector(34 downto 0);
-      y : IN std_logic_vector(34 downto 0);          
+      y : IN std_logic_vector(34 downto 0);
       result : OUT std_logic_vector(37 downto 0)
       );
    END COMPONENT;
@@ -40,7 +44,7 @@ architecture Behavioral of mandelbrot_stage is
    COMPONENT sqr35
    PORT(
       clk    : IN  std_logic;
-      x      : IN  std_logic_vector(34 downto 0);          
+      x      : IN  std_logic_vector(34 downto 0);
       result : OUT std_logic_vector(37 downto 0)
       );
    END COMPONENT;
@@ -50,17 +54,17 @@ architecture Behavioral of mandelbrot_stage is
    PORT(
       clk    : IN  std_logic;
       x      : IN  std_logic_vector(width-1 downto 0);
-      y      : IN  std_logic_vector(width-1 downto 0);          
+      y      : IN  std_logic_vector(width-1 downto 0);
       result : OUT std_logic_vector(width downto 0)
       );
    END COMPONENT;
-   
+
    COMPONENT subn
    Generic (width : natural);
    PORT(
       clk    : IN  std_logic;
       x      : IN  std_logic_vector(width-1 downto 0);
-      y      : IN  std_logic_vector(width-1 downto 0);          
+      y      : IN  std_logic_vector(width-1 downto 0);
       result : OUT std_logic_vector(width downto 0)
       );
    END COMPONENT;
@@ -68,10 +72,11 @@ architecture Behavioral of mandelbrot_stage is
    COMPONENT Iteration_overflow
    PORT(
       clk            : IN  std_logic;
-      Iterations_in  : IN  std_logic_vector(7 downto 0);
+      max_iters_in   : IN  iterations_type;
+      Iterations_in  : IN  iterations_type;
       Overflow_in    : IN  std_logic;
-      Overflow_this  : IN  std_logic;          
-      Iterations_out : OUT std_logic_vector(7 downto 0);
+      Overflow_this  : IN  std_logic;
+      Iterations_out : OUT iterations_type;
       Overflow_out   : OUT std_logic
       );
    END COMPONENT;
@@ -81,7 +86,7 @@ architecture Behavioral of mandelbrot_stage is
       clk : IN std_logic;
       address : IN std_logic_vector(9 downto 0);
       din : IN std_logic_vector(35 downto 0);
-      we : IN std_logic;          
+      we : IN std_logic;
       value : OUT std_logic_vector(35 downto 0)
       );
    END COMPONENT;
@@ -89,7 +94,7 @@ architecture Behavioral of mandelbrot_stage is
    COMPONENT delay2cycles
    PORT(
       clk  : IN  std_logic;
-      din  : IN  std_logic_vector(38 downto 0);          
+      din  : IN  std_logic_vector(38 downto 0);
       dout : OUT std_logic_vector(38 downto 0)
       );
    END COMPONENT;
@@ -120,7 +125,7 @@ architecture Behavioral of mandelbrot_stage is
    PORT(
       clk : IN std_logic;
       real_in : IN std_logic_vector(35 downto 0);
-      imaginary_in : IN std_logic_vector(35 downto 0);          
+      imaginary_in : IN std_logic_vector(35 downto 0);
       real_out : OUT std_logic_vector(34 downto 0);
       imaginary_out : OUT std_logic_vector(34 downto 0);
       early_overflow : OUT std_logic
@@ -144,13 +149,13 @@ architecture Behavioral of mandelbrot_stage is
    signal const_to_write     : std_logic_vector(35 downto 0) := (others => '0');
    signal real_result        : std_logic_vector(39 downto 0) := (others => '0');
    signal imaginary_result     : std_logic_vector(39 downto 0) := (others => '0');
-   
-   signal iterations_out_predelay : std_logic_vector(7 downto 0);
-   signal iterations_in_delayed   : std_logic_vector(7 downto 0);
-   
+
+   signal iterations_out_predelay : iterations_type;
+   signal iterations_in_delayed   : iterations_type;
+
    signal x_addr                : STD_LOGIC_VECTOR (9 downto 0);
    signal y_addr                : STD_LOGIC_VECTOR (9 downto 0);
-   
+
    signal active_in_v           : std_logic_vector(0 downto 0);
    signal active_out_v          : std_logic_vector(0 downto 0);
 
@@ -159,7 +164,7 @@ architecture Behavioral of mandelbrot_stage is
 
    signal storey_in_v           : std_logic_vector(0 downto 0);
    signal storey_out_v          : std_logic_vector(0 downto 0);
-   
+
    signal storex_tap            : std_logic_vector(0 downto 0);
    signal storey_tap            : std_logic_vector(0 downto 0);
 
@@ -175,13 +180,13 @@ architecture Behavioral of mandelbrot_stage is
    signal overflow_this      : std_logic := '0';
 begin
    overflow_this      <= magnitude(38) or magnitude(37) or magnitude(36) or magnitude(35) or magnitude(34) or early_overflow_delayed(0);
-   
+
    overflow_in_v(0)   <= overflow_in;
    overflow_out       <= overflow_out_delayed(0);
 
    active_in_v(0)     <= active_in;
    active_out         <= active_out_v(0);
-   
+
    storex_in_v(0)     <= storex_in;
    storex_out         <= storex_out_v(0);
 
@@ -190,7 +195,7 @@ begin
 
    real_out           <= real_result(35 downto 0);
    imaginary_out      <= imaginary_result(35 downto 0);
-   
+
    real_imaginary_two <= real_imaginary(37 downto 0) & '0';
 
    real_const_ex      <= real_const(35)      & real_const(35)      & real_const(35)      & real_const;
@@ -199,18 +204,18 @@ begin
    early_overflow_check: early_overflow PORT MAP(
      clk           => clk,
      real_in       => real_in,
-     imaginary_in  => imaginary_in, 
+     imaginary_in  => imaginary_in,
      real_out      => real_post_check,
      imaginary_out => imaginary_post_check,
      early_overflow=> early_overflow_result(0)
    );
-   
+
    Inst_delay2cycles: delay2cycles PORT MAP(
       clk => clk,
       din => real_imaginary_two,
-      dout => real_imaginary_two_delayed 
+      dout => real_imaginary_two_delayed
    );
-   
+
    mult35_ab2: mult35 PORT MAP(
       clk => clk,
       x   => real_post_check,
@@ -268,13 +273,14 @@ begin
 
    Iteration_overflow_test: Iteration_overflow PORT MAP(
       clk => clk,
+      max_iters_in => max_iters_in,
       Iterations_in => Iterations_in_delayed,
       Overflow_in => Overflow_in_delayed(0),
       Overflow_this => Overflow_this,
       Iterations_out => iterations_out_predelay,
       Overflow_out => Overflow_out_v(0)
    );
-  
+
    real_constant_store: constant_store PORT MAP(
       clk     => clk,
       address => x_addr,
@@ -314,7 +320,7 @@ begin
       tap_out => const_to_write,
       n_out => constant_out
    );
-   
+
    active_delay: untapped_delay GENERIC MAP (width => 1, depth => 12)
    PORT MAP(
       clk => clk,
@@ -343,14 +349,14 @@ begin
       n_out => overflow_out_delayed
    );
 
-   iterations_in_untapped_delay: untapped_delay GENERIC MAP (width => 8, depth => 9)
+   iterations_in_untapped_delay: untapped_delay GENERIC MAP (width => iterations_type'length, depth => 9)
    PORT MAP(
       clk => clk,
       n_in => iterations_in,
       n_out => iterations_in_delayed
    );
 
-   iterations_out_untapped_delay: untapped_delay GENERIC MAP (width => 8, depth => 0)
+   iterations_out_untapped_delay: untapped_delay GENERIC MAP (width => iterations_type'length, depth => 0)
    PORT MAP(
       clk => clk,
       n_in => iterations_out_predelay,
