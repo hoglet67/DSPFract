@@ -2,6 +2,8 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+use work.dsp_fractal_defs.all;
+
 entity dsp_fractal_papilio_duo is
     Port (
         clk_32    : in    std_logic;
@@ -69,8 +71,8 @@ begin
 
     core_inst : entity work.dsp_fractal_core
         generic map (
-            use_two_mandelbrot_stages => false;
-            use_small_sqr35           => false
+            use_two_mandelbrot_stages => false,
+            sqr35_impl                => SQR35_IMPL_ORIG
         )
         port map (
             -- Clocks

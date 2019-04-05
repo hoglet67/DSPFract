@@ -2,15 +2,15 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 
-entity test_sqr35 is
+entity sqr35_test is
     port (
            clk : in  std_logic;
              x : in  std_logic_vector (34 downto 0);
         result : out std_logic_vector (37 downto 0)
     );
-end test_sqr35;
+end sqr35_test;
 
-architecture Behavioral of test_sqr35 is
+architecture Behavioral of sqr35_test is
 
 -- note: cross artifacts start appearing when sum_type < 52 bits wide
 subtype  mul_in_type is std_logic_vector(17 downto 0); -- fixed
@@ -80,9 +80,9 @@ pad_zero <= (others => '0');
 pad_sign <= (others => mb2(mb2'left));
 
 -- carefully align the three results (as per UG389 page 28) to form 70-bit padded products
-pa2 <=                         ma2 & pad_zero(33 downto 0); -- XH*XH aligned to the LHS of 70-bit product
-pb2 <= pad_sign(15 downto 0) & mb2 & pad_zero(17 downto 0); -- offset right by 17 - 1 = 16 bits
-pc2 <= pad_zero(33 downto 0) & mc2;                         -- offset right by 34 bits
+pa2 <=                         ma2               & pad_zero(33 downto 0); -- XH*XH aligned to the LHS of 70-bit product
+pb2 <= pad_sign(15 downto 0) & mb2               & pad_zero(17 downto 0); -- offset right by 17 - 1 = 16 bits
+pc2 <= pad_zero(35 downto 0) & mc2(33 downto 18) & pad_zero(17 downto 0); -- offset right by 34 bits
 
 process(clk)
 begin

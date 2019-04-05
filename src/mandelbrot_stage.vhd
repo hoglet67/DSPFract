@@ -5,7 +5,7 @@ use work.dsp_fractal_defs.all;
 
 entity mandelbrot_stage is
     generic (
-        use_small_sqr35  : boolean
+        sqr35_impl     : integer
         );
     port (
         clk            : in  STD_LOGIC;
@@ -127,7 +127,7 @@ begin
       result => real_imaginary
    );
 
-   orig_sqr35: if not use_small_sqr35 generate
+   sqr35_orig: if sqr35_impl = SQR35_IMPL_ORIG generate
 
        sqr35_real: entity work.sqr35 PORT MAP(
            clk    => clk,
@@ -143,15 +143,15 @@ begin
 
    end generate;
 
-   small_sqr35: if use_small_sqr35 generate
+   sqr35_test: if sqr35_impl = SQR35_IMPL_TEST generate
 
-       sqr35_real: entity work.test_sqr35 PORT MAP(
+       sqr35_real: entity work.sqr35_test PORT MAP(
            clk    => clk,
            x      => real_post_check,
            result => real_squared
            );
 
-       sqr35_imaginary: entity work.test_sqr35 PORT MAP(
+       sqr35_imaginary: entity work.sqr35_test PORT MAP(
            clk    => clk,
            x      => imaginary_post_check,
            result => imaginary_squared
@@ -159,6 +159,37 @@ begin
 
    end generate;
 
+   sqr35_small: if sqr35_impl = SQR35_IMPL_SMALL generate
+
+       sqr35_real: entity work.sqr35_small PORT MAP(
+           clk    => clk,
+           x      => real_post_check,
+           result => real_squared
+           );
+
+       sqr35_imaginary: entity work.sqr35_small PORT MAP(
+           clk    => clk,
+           x      => imaginary_post_check,
+           result => imaginary_squared
+           );
+
+   end generate;
+
+   sqr35_lut: if sqr35_impl = SQR35_IMPL_LUT generate
+
+       sqr35_real: entity work.sqr35_lut PORT MAP(
+           clk    => clk,
+           x      => real_post_check,
+           result => real_squared
+           );
+
+       sqr35_imaginary: entity work.sqr35_lut PORT MAP(
+           clk    => clk,
+           x      => imaginary_post_check,
+           result => imaginary_squared
+           );
+
+   end generate;
 
    addn_magnitude: entity work.addn GENERIC MAP (
       width => 38

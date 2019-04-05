@@ -7,7 +7,7 @@ use work.dsp_fractal_defs.all;
 entity dsp_fractal_core is
     generic (
         use_two_mandelbrot_stages : boolean := false;
-        use_small_sqr35           : boolean := false
+        sqr35_impl                : integer := SQR35_IMPL_ORIG
         );
     port (
         -- Clocks
@@ -216,7 +216,7 @@ begin
 
         Inst_mandelbrot_stage: entity work.mandelbrot_stage
             generic map (
-                use_small_sqr35   => use_small_sqr35
+                sqr35_impl        => sqr35_impl
             )
             port map (
                 clk               => clk_core,
@@ -251,7 +251,7 @@ begin
 
         Inst_mandelbrot_stage1: entity work.mandelbrot_stage
             generic map (
-                use_small_sqr35   => use_small_sqr35
+                sqr35_impl        => sqr35_impl
             )
             port map (
                 clk               => clk_core,
@@ -282,7 +282,7 @@ begin
 
         Inst_mandelbrot_stage2: entity work.mandelbrot_stage
             generic map (
-                use_small_sqr35   => use_small_sqr35
+                sqr35_impl        => sqr35_impl
             )
             port map (
                 clk               => clk_core,
@@ -311,8 +311,6 @@ begin
                 active_out        => active_last
                 );
     end generate;
-
-
 
     -- Color Maps
 

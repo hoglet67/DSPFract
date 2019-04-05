@@ -14,6 +14,7 @@ ipcore_dir/coregen.*
 ipcore_dir/clocking/
 ipcore_dir/core_mem_fifo_ste/
 ipcore_dir/ip_constant_store_ste/
+ipcore_dir/ip_mult18_lut/
 ipcore_dir/ip_mult18/
 ipcore_dir/ip_mult35/
 ipcore_dir/_xmsgs/
