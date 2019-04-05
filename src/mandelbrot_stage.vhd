@@ -145,13 +145,13 @@ begin
 
    small_sqr35: if use_small_sqr35 generate
 
-       sqr35_real: entity work.small_sqr35 PORT MAP(
+       sqr35_real: entity work.test_sqr35 PORT MAP(
            clk    => clk,
            x      => real_post_check,
            result => real_squared
            );
 
-       sqr35_imaginary: entity work.small_sqr35 PORT MAP(
+       sqr35_imaginary: entity work.test_sqr35 PORT MAP(
            clk    => clk,
            x      => imaginary_post_check,
            result => imaginary_squared
