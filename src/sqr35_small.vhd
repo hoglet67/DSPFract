@@ -17,7 +17,7 @@ architecture Behavioral of sqr35_small is
 subtype  mul_in_type is std_logic_vector(17 downto 0); -- fixed
 subtype mul_out_type is std_logic_vector(35 downto 0); -- fixed
 subtype    prod_type is std_logic_vector(69 downto 0); -- fixed
-subtype     sum_type is std_logic_vector(69 downto 0); -- this can be adjusted
+subtype     sum_type is std_logic_vector(51 downto 0); -- this can be adjusted
 subtype  result_type is std_logic_vector(37 downto 0); -- fixed
 
 -- define a 10-bit squarer (with 16 bit output), implemented as a block RAM
@@ -26,9 +26,10 @@ type squarer_type is array(0 to 1023) of std_logic_vector(15 downto 0);
 function squarer_init return squarer_type is
   variable temp : squarer_type;
 begin
-  forLoop: for i in squarer_type'left to squarer_type'right loop
-    temp(i) := std_logic_vector(to_unsigned(i * i / 16, 16));
+  forLoop: for i in 0 to 1022 loop
+    temp(i) := std_logic_vector(to_unsigned((i + 1) * (i + 1) / 16, 16));
   end loop;
+  temp(1023) := x"FFFF";
   return temp;
 end function;
 

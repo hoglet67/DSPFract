@@ -134,8 +134,8 @@ begin
 
     core_inst : entity work.dsp_fractal_core
         generic map (
-            use_two_mandelbrot_stages => false,
-            sqr35_impl                => SQR35_IMPL_LUT
+            use_two_mandelbrot_stages => true,
+            sqr35_impl                => SQR35_IMPL_SMALL
             )
         port map (
             -- Clocks
