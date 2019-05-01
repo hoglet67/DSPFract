@@ -7,7 +7,7 @@ use unisim.vcomponents.all;
 
 use work.dsp_fractal_defs.all;
 
-entity dsp_fractal_lx9core is
+entity dsp_fractal_lx9core_old is
     Port (
         -- System oscillator
         clk50        : in    std_logic;
@@ -37,14 +37,11 @@ entity dsp_fractal_lx9core is
         -- Misc
         pmod0        : out   std_logic_vector(7 downto 0);
         pmod1        : out   std_logic_vector(7 downto 0);
-        pmod2        : out   std_logic_vector(7 downto 0);
-        sw1          : in    std_logic;
-        sw2          : in    std_logic;
         led          : out   std_logic
       );
-end dsp_fractal_lx9core;
+end dsp_fractal_lx9core_old;
 
-architecture Behavioral of dsp_fractal_lx9core is
+architecture Behavioral of dsp_fractal_lx9core_old is
 
     signal clk_core   : std_logic;
     signal clk_mem    : std_logic;
@@ -194,7 +191,7 @@ begin
     ctrl_left    <= ctrl_reg(2);
     ctrl_right   <= ctrl_reg(3);
     ctrl_zoom    <= ctrl_reg(4);
-    led          <= ctrl_reg(7) or sw1 or sw2;
+    led          <= ctrl_reg(7);
 
     irq          <= '0';
     nmi          <= '0';
@@ -209,6 +206,5 @@ begin
 
     pmod0        <= blue & red;
     pmod1        <= '0' & '0' & vsync & hsync & green ;
-    pmod2        <= (others => '1');
 
 end Behavioral;
