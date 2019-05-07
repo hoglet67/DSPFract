@@ -56,6 +56,8 @@ architecture Behavioral of dsp_fractal_lx9core is
     signal ctrl_zoom  : std_logic;
 
     signal ctrl_reg   : std_logic_vector(7 downto 0);
+    signal bank_reg   : std_logic_vector(7 downto 0);
+    signal rom_dout   : std_logic_vector(7 downto 0);
 
     signal red        : std_logic_vector(3 downto 0);
     signal green      : std_logic_vector(3 downto 0);
@@ -63,7 +65,10 @@ architecture Behavioral of dsp_fractal_lx9core is
     signal hsync      : std_logic;
     signal vsync      : std_logic;
 
-    signal selected   : std_logic;
+    signal reg_sel    : std_logic;
+    signal rom_sel    : std_logic;
+    signal bank_sel   : std_logic;
+    signal booting    : std_logic;
 
     signal clkin_buf  : std_logic;
     signal clkfb_buf  : std_logic;
@@ -165,26 +170,48 @@ begin
             ctrl_zoom  => ctrl_zoom
             );
 
+    inst_support_rom : entity work.support_rom
+        port map (
+            clock   => clke,     -- rising edge
+            address => bank_reg(3 downto 0) & bus_addr,
+            data    => rom_dout
+            );
+
+
     ------------------------------------------------
     -- Bus Interface
     ------------------------------------------------
 
     -- Decode 0xFCA8-0xFCAB
-    selected <= '1' when pgfc_n = '0' and bus_addr(7 downto 2) & "00"  = x"A8" else '0';
+    reg_sel  <= '1' when pgfc_n = '0' and bus_addr(7 downto 2) & "00" = x"A8" else '0';
+
+    -- Decode 0xFCFF
+    bank_sel <= '1' when pgfc_n = '0' and bus_addr = x"FF" else '0';
+
+    -- Decode 0xFDxx during boot
+    rom_sel  <= '1' when pgfd_n = '0' else '0';
 
     -- Writes to the control register
     bus_interface_fc : process(clke)
     begin
         if falling_edge(clke) then
             if rst_n = '0' then
-                ctrl_reg  <= x"00";
-                max_iters <= x"00FF";
-            elsif rnw = '0' and selected = '1' then
-                case bus_addr(1 downto 0) is
-                    when "10"   => max_iters(7 downto 0)  <= bus_data;
-                    when "11"   => max_iters(15 downto 8)  <= bus_data;
-                    when others => ctrl_reg  <= bus_data;
-                end case;
+                ctrl_reg     <= x"00";
+                max_iters    <= x"00FF";
+                booting      <= sw1 or sw2;
+                bank_reg     <= (others => '0');
+            elsif rnw = '0' then
+                if reg_sel = '1' then
+                    case bus_addr(1 downto 0) is
+                        when "10"   => max_iters(7 downto 0)  <= bus_data;
+                        when "11"   => max_iters(15 downto 8) <= bus_data;
+                        when others => ctrl_reg  <= bus_data;
+                    end case;
+                elsif bank_sel = '1' then
+                    bank_reg <= bus_data;
+                elsif rom_sel = '1' then
+                    booting <= '0';
+                end if;
             end if;
         end if;
     end process;
@@ -194,17 +221,18 @@ begin
     ctrl_left    <= ctrl_reg(2);
     ctrl_right   <= ctrl_reg(3);
     ctrl_zoom    <= ctrl_reg(4);
-    led          <= ctrl_reg(7) or sw1 or sw2;
+    led          <= ctrl_reg(7) or booting;
 
-    irq          <= '0';
     nmi          <= '0';
+    irq          <= booting;
 
-
-    bus_data_oel <= not selected;
+    bus_data_oel <= not (reg_sel or bank_sel or rom_sel);
     bus_data_dir <= rnw;
-    bus_data     <= ctrl_reg                when rnw = '1' and selected = '1' and bus_addr(1) = '1' else
-                    max_iters(15 downto 8)  when rnw = '1' and selected = '1' and bus_addr(0) = '1' else
-                    max_iters( 7 downto 0)  when rnw = '1' and selected = '1'                       else
+    bus_data     <= rom_dout                when rnw = '1' and rom_sel = '1'                       else
+                    bank_reg                when rnw = '1' and bank_sel = '1'                      else
+                    ctrl_reg                when rnw = '1' and reg_sel = '1' and bus_addr(1) = '1' else
+                    max_iters(15 downto 8)  when rnw = '1' and reg_sel = '1' and bus_addr(0) = '1' else
+                    max_iters( 7 downto 0)  when rnw = '1' and reg_sel = '1'                       else
                     (others => 'Z');
 
     pmod0        <= blue & red;
